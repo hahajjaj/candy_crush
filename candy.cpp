@@ -27,70 +27,47 @@ struct Point {
 };
 
 class Bonbon{
-    Fl_PNG_Image &sprite;
-    Point center;
-    Fl_Color frameColor;
-    Fl_Color fillColor;
-    int w,h;
+  
 public:
-    Bonbon(Point center, int w, int h, Fl_PNG_Image &spri, Fl_Color frameColor = FL_BLACK, Fl_Color fillColor = FL_WHITE);
-    void draw();
-    bool contains(Point p);
-    void setFrameColor(Fl_Color newFrameColor);
-    void setFillColor(Fl_Color newFillColor);
+    Fl_PNG_Image &sprite;
+    Bonbon(Fl_PNG_Image &spri);
 
-    Point get_center();
-    void set_center(Point p);
-
-    string get_bonbon();
-    void set_bonbon(string bonbon);
 };
 
-Bonbon::Bonbon(Point center, int w, int h, Fl_PNG_Image &spri, Fl_Color frameColor, Fl_Color fillColor):center{center},w{w},h{h},sprite{spri}, fillColor{fillColor}, frameColor{frameColor}{}
-
-
-void Bonbon::draw(){
-    fl_draw_box(FL_FLAT_BOX,center.x,center.y,w,h,fillColor); 
-    fl_draw_box(FL_BORDER_FRAME,center.x,center.y,w,h,frameColor);
-    sprite.draw(center.x, center.y, w, h);
-}
-
-bool Bonbon::contains(Point p){
-    return p.x>=center.x &&
-        p.x<center.x+w &&
-        p.y>=center.y &&
-        p.y<center.y+h;
-}
-
-void Bonbon::setFrameColor(Fl_Color newFrameColor){
-    frameColor=newFrameColor;
-}
-
-void Bonbon::setFillColor(Fl_Color newFillColor){
-    fillColor=newFillColor;
-}
+Bonbon::Bonbon(Fl_PNG_Image &spri):sprite{spri}{}
  
 //#####################################################################################
 //#####################################################################################
 
 class Cell {
     vector<Cell *> neighbors;
-    Bonbon bonbon;
     bool on=false;
-    
+    Point center;
+    Fl_Color frameColor;
+    Fl_Color fillColor;
+    int w,h;
 public:
-    Cell(Point center,int w, int h, Fl_PNG_Image &spri);
+    Bonbon *bonbon;
+    Cell(Point center,int w, int h,  Bonbon *bonbon, Fl_Color frameColor = FL_BLACK, Fl_Color fillColor = FL_WHITE);
     void draw();
-    void setNeighbors(const vector<Cell *> newNeighbors);
     void mouseMove(Point mouseLoc);
     void mouseClick(Point mouseLoc);
+    void setNeighbors(const vector<Cell *> newNeighbors);
+    bool contains(Point p);
+    void setFrameColor(Fl_Color newFrameColor);
+    void setFillColor(Fl_Color newFillColor);
+    void Inversion(Cell *cell);
+    void setBonbon(Bonbon *newBonbon);
     
 };
 
-Cell::Cell(Point center,int w, int h, Fl_PNG_Image &spri):bonbon(center,w,h, spri){}
+Cell::Cell(Point center,int w, int h, Bonbon *bonbon, Fl_Color frameColor, Fl_Color fillColor):center{center},w{w},h{h},bonbon{bonbon}, frameColor{frameColor}, fillColor{fillColor}{
+}
 
 void Cell::draw(){
-    bonbon.draw();
+    fl_draw_box(FL_FLAT_BOX,center.x,center.y,w,h,fillColor); 
+    fl_draw_box(FL_BORDER_FRAME,center.x,center.y,w,h,frameColor);
+    bonbon->sprite.draw(center.x, center.y, w, h);
 }
 
 void Cell::setNeighbors(const vector<Cell *> newNeighbors){
@@ -98,21 +75,61 @@ void Cell::setNeighbors(const vector<Cell *> newNeighbors){
 }
 
 void Cell::mouseMove(Point mouseLoc){
-    if (bonbon.contains(mouseLoc)){
-        bonbon.setFrameColor(FL_RED);
+    if (contains(mouseLoc)){
+        setFrameColor(FL_RED);
     }
     else {
-        bonbon.setFrameColor(FL_BLACK);
+        setFrameColor(FL_BLACK);
     }
 }
+
+bool Cell::contains(Point p){
+    return p.x>=center.x &&
+        p.x<center.x+w &&
+        p.y>=center.y &&
+        p.y<center.y+h;
+}
+
+void Cell::setFrameColor(Fl_Color newFrameColor){
+    frameColor=newFrameColor;
+}
+
+void Cell::setFillColor(Fl_Color newFillColor){
+    fillColor=newFillColor;
+}
+
+ void Cell::setBonbon(Bonbon *newBonbon){
+     bonbon = newBonbon;
+ }
+
+void Cell::Inversion(Cell *cell){
+    Bonbon *bonbon1 = cell->bonbon;
+    Bonbon *bonbon2 = bonbon;
+    cell->setBonbon(bonbon2);
+    setBonbon(bonbon1);
+}
+
+
 void Cell::mouseClick(Point mouseLoc){
-    if (bonbon.contains(mouseLoc)){
+    static int bonbons_clicked;
+    static Cell *cell1;
+    if (contains(mouseLoc)){
         on = !on;
         if (on){
-            bonbon.setFillColor(FL_RED);
+            setFillColor(FL_RED);
+            bonbons_clicked++;
+              if (bonbons_clicked == 1){
+                cell1 = this;
+            }
+              else if (bonbons_clicked == 2){
+                Inversion(cell1);
+                bonbons_clicked = 0;
+                setFillColor(FL_WHITE);
+                cell1->setFillColor(FL_WHITE);
+              }
         }
         else {
-            bonbon.setFillColor(FL_WHITE);
+            setFillColor(FL_WHITE);
         }
     }
 }
@@ -153,7 +170,8 @@ void Plateau::initialize_grid(){
             int nbr_aleatoire = (rand() % bonbons.size());
             const char * nom_fichier = bonbons[nbr_aleatoire].c_str();
             Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-            cells[x].push_back(Cell{Point{100*(x),100*(y)},100,100,*sprite});
+            Bonbon *newBonbon = new Bonbon{*sprite};
+            cells[x].push_back(Cell{Point{100*(x),100*(y)},100,100,newBonbon});
         }
     }
 }
