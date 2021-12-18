@@ -22,6 +22,8 @@ const int windowWidth=900;
 const int windowHeight=900;
 const double refreshPerSecond=30;
 
+class Animation;
+
 struct Point {
     int x,y;
 };
@@ -31,22 +33,26 @@ class Bonbon{
 public:
     Fl_PNG_Image &sprite;
     Bonbon(Fl_PNG_Image &spri);
-
+    
 };
 
 Bonbon::Bonbon(Fl_PNG_Image &spri):sprite{spri}{}
 
 class Cell {
-    
+    public:
+    Animation *anim;
     bool on=false;
-    Point center;
+    
     Fl_Color frameColor;
     Fl_Color fillColor;
     int w,h;
-public:
+
+    Point center;
+    vector<Cell *> neighbors;
     Bonbon *bonbon;
     Cell(Point center,int w, int h,  Bonbon *bonbon, Fl_Color frameColor = FL_BLACK, Fl_Color fillColor = FL_WHITE);
     void draw();
+    void setNeighbors(const vector<Cell *> newNeighbors);
     void mouseMove(Point mouseLoc);
     void mouseClick(Point mouseLoc);
     bool contains(Point p);
@@ -57,13 +63,78 @@ public:
     
 };
 
-Cell::Cell(Point center,int w, int h, Bonbon *bonbon, Fl_Color frameColor, Fl_Color fillColor):center{center},w{w},h{h},bonbon{bonbon}, frameColor{frameColor}, fillColor{fillColor}{
+class Animation{
+    public:
+    Cell *c;
+    Animation(Cell *cell):c{cell}{}
+    void translation_bonbon(Cell *cell2);
+    string test_voisins_valide(Cell *cell2);
+    void suppression_bonbon();
+};
+
+string Animation::test_voisins_valide(Cell *cell2){
+    int test = -1;
+    for (int i = 0; i < 4; i++){
+        if (cell2->center.x == c->neighbors[i]->center.x && cell2->center.y == c->neighbors[i]->center.y){
+            test = i;
+        }
+    };
+    if (test == 0)
+        return "g";
+    else if (test == 1)
+        return "d";
+    else if (test == 2)
+        return "h";
+    else if (test == 3)
+        return "b";
+}
+
+void Animation::translation_bonbon(Cell *cell2){
+    Point centre1 = c->center;
+    Point centre2 = cell2->center;
+    string ret = test_voisins_valide(cell2);
+    if (ret == "g"){
+        while (c->center.x != centre2.x){
+            c->center.x-=1;
+            cell2->center.x+=1;
+            Fl::wait(0.03);
+        }
+    }
+    else if (ret == "d"){
+        while (c->center.x != centre2.x){
+            c->center.x+=1;
+            Fl::wait(0.03);
+            cell2->center.x-=1;
+        }
+    }
+    else if (ret == "h"){
+        while (c->center.y != centre2.y){
+            c->center.y+=1;
+            Fl::wait(0.03);
+            cell2->center.y-=1;
+        }
+    }
+    else if (ret == "b"){
+        while (c->center.y != centre2.y){
+            c->center.y-=1;
+            Fl::wait(0.03);
+            cell2->center.y+=1;
+        }
+    }
+}
+
+Cell::Cell(Point center,int w, int h, Bonbon *bonbon, Fl_Color frameColor, Fl_Color fillColor):center{center},w{w},h{h},bonbon{bonbon},anim{nullptr}, frameColor{frameColor}, fillColor{fillColor}{
+    
 }
 
 void Cell::draw(){
     fl_draw_box(FL_FLAT_BOX,center.x,center.y,w,h,fillColor); 
     fl_draw_box(FL_BORDER_FRAME,center.x,center.y,w,h,frameColor);
     bonbon->sprite.draw(center.x, center.y, w, h);
+}
+
+void Cell::setNeighbors(const vector<Cell *> newNeighbors){
+    neighbors = newNeighbors;
 }
 
 void Cell::mouseMove(Point mouseLoc){
@@ -97,23 +168,29 @@ void Cell::setFillColor(Fl_Color newFillColor){
 void Cell::Inversion(Cell *cell){
     Bonbon *bonbon1 = cell->bonbon;
     Bonbon *bonbon2 = bonbon;
+    
     cell->setBonbon(bonbon2);
     setBonbon(bonbon1);
 }
 
 
 void Cell::mouseClick(Point mouseLoc){
+    
     static int bonbons_clicked;
     static Cell *cell1;
     if (contains(mouseLoc)){
         on = !on;
         if (on){
             setFillColor(FL_RED);
+            
             bonbons_clicked++;
               if (bonbons_clicked == 1){
+                anim = new Animation{this};
                 cell1 = this;
             }
               else if (bonbons_clicked == 2){
+                cell1->anim->translation_bonbon(this);
+                delete anim;
                 Inversion(cell1);
                 bonbons_clicked = 0;
                 setFillColor(FL_WHITE);
@@ -126,12 +203,21 @@ void Cell::mouseClick(Point mouseLoc){
     }
 }
 
+//###########################################################
+
+
+
+//##########################################################
+
 class Plateau{
     vector<string>bonbons{"sprite/1.png","sprite/2.png","sprite/3.png","sprite/4.png","sprite/5.png","sprite/6.png"};
-    vector<Cell> cells;
+    // vector<Cell> cells;
+    vector< vector<Cell> > cells;
 public:
     Plateau();
     void draw();
+    void initialize_neighbours();
+    void initialize_grid();
     void load_sprite();
     void mouseMove(Point mouseLoc);
     void mouseClick(Point mouseLoc);
@@ -140,23 +226,68 @@ public:
 
 
 Plateau::Plateau(){
-    for (int i=0;i<81;i++){
-        int nbr_aleatoire = (rand() % bonbons.size());
-        const char * nom_fichier = bonbons[nbr_aleatoire].c_str();   // COnvertit le string en const char * pour le passer à Fl_PNG_Image
-        Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);   // CHarge le sprite dans la ram
-        Bonbon *newBonbon = new Bonbon{*sprite};
-        cells.push_back(Cell{Point{100*(i%9),100*(i/9)},100,100,newBonbon});   // Crée une cellule et les mets dans le vecteur Cells
+    initialize_grid();
+    initialize_neighbours();
+    
+}
+void Plateau::initialize_grid(){
+    for (int x=0; x<9;x++){
+        cells.push_back({});
+        for (int y=0; y<9; y++){
+            int nbr_aleatoire = (rand() % bonbons.size());
+            const char * nom_fichier = bonbons[nbr_aleatoire].c_str();
+            Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
+            Bonbon *newBonbon = new Bonbon{*sprite};
+            cells[x].push_back(Cell{Point{100*(x),100*(y)},100,100,newBonbon});
+        }
     }
-}  
+}
+
+void Plateau::initialize_neighbours(){
+    for (int x=0; x<9; x++){
+        for (int y=0; y<9; y++){
+            vector<Cell *> neighbors;
+            for (auto &shift: vector<Point>({
+            {-1, 0}, // gauche // The 8 neighbors relative to the cell
+            { 1, 0}, // droite
+            { 0, 1}, // haut
+            { 0, -1}, // bas
+            {-1, 1},
+            { 1, 1},
+            { 1, -1},
+            {-1, -1},
+            })) {
+                int neighborx = x+shift.x;
+                int neighbory = y+shift.y;
+                if (neighborx >= 0 && 
+                    neighbory >= 0 && 
+                    neighborx < cells.size() & 
+                    neighbory < cells[neighborx].size()){
+                    neighbors.push_back(&cells[neighborx][neighbory]);
+                }
+                cells[x][y].setNeighbors(neighbors);
+            }
+        }
+    }
+}
 
 void Plateau::draw() {
-    for (auto &c:cells) c.draw();
+    for (auto &v: cells)
+        for (auto &c: v)
+            c.draw();
 }
 void Plateau::mouseMove(Point mouseLoc) {
-    for (auto &c:cells) c.mouseMove(mouseLoc);
+    for (auto &v: cells)
+      for (auto &c: v)
+        c.mouseMove(mouseLoc);
 }
 void Plateau::mouseClick(Point mouseLoc){
-    for (auto &c:cells) c.mouseClick(mouseLoc);        
+    for (auto &v: cells){
+        for (auto &c: v){
+            c.mouseClick(mouseLoc);
+            
+        }
+    }       
 }
 
 /* ------ DO NOT EDIT BELOW HERE (FOR NOW) ------ */
