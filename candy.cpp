@@ -128,8 +128,8 @@ Cell::Cell(Point center,int w, int h, Bonbon *bonbon, Fl_Color frameColor, Fl_Co
 }
 
 void Cell::draw(){
-    fl_draw_box(FL_FLAT_BOX,center.x,center.y,w,h,fillColor); 
-    fl_draw_box(FL_BORDER_FRAME,center.x,center.y,w,h,frameColor);
+    // fl_draw_box(FL_FLAT_BOX,center.x,center.y,w,h,fillColor); 
+    // fl_draw_box(FL_BORDER_FRAME,center.x,center.y,w,h,frameColor);
     bonbon->sprite.draw(center.x, center.y, w, h);
 }
 
@@ -166,11 +166,18 @@ void Cell::setFillColor(Fl_Color newFillColor){
  }
 
 void Cell::Inversion(Cell *cell){
+    
     Bonbon *bonbon1 = cell->bonbon;
     Bonbon *bonbon2 = bonbon;
     
+    
+    cell->anim->translation_bonbon(this);
     cell->setBonbon(bonbon2);
     setBonbon(bonbon1);
+    Point centre_actuel = this->center;
+    this->center = cell->center;
+    cell->center = centre_actuel;
+    delete anim;
 }
 
 
@@ -189,8 +196,8 @@ void Cell::mouseClick(Point mouseLoc){
                 cell1 = this;
             }
               else if (bonbons_clicked == 2){
-                cell1->anim->translation_bonbon(this);
-                delete anim;
+                // cell1->anim->translation_bonbon(this);
+                
                 Inversion(cell1);
                 bonbons_clicked = 0;
                 setFillColor(FL_WHITE);
