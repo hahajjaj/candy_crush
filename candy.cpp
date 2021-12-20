@@ -2,6 +2,12 @@
 //Safouan Ehlalouch matricul
 //Projet LDP 2 Candy Crush
 
+/*
+Utiliser la méthode tester_coup sur tout le plateau à chaque fois et après avoir rajouter chaque cell dans le vectore verifier si la nouvelle
+cell a ajouter est déjà dans le vecteur ou non.
+Puis supprimer tout le vecteur d'un coup.
+*/
+
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Shared_Image.H>
@@ -22,7 +28,11 @@ const int windowWidth=900;
 const int windowHeight=900;
 const double refreshPerSecond=30;
 
+
+
+
 class Animation;
+class Jeu;
 
 struct Point {
     int x,y;
@@ -31,15 +41,17 @@ struct Point {
 class Bonbon{
   
 public:
+    string nom_sprite;
     Fl_PNG_Image &sprite;
-    Bonbon(Fl_PNG_Image &spri);
+    Bonbon(Fl_PNG_Image &spri, string nom_sprite);
     
 };
 
-Bonbon::Bonbon(Fl_PNG_Image &spri):sprite{spri}{}
+Bonbon::Bonbon(Fl_PNG_Image &spri, string nom_sprite):sprite{spri}, nom_sprite{nom_sprite}{}
 
 class Cell {
     public:
+    Jeu *jeu;
     Animation *anim;
     bool on=false;
     
@@ -63,6 +75,67 @@ class Cell {
     
 };
 
+//############################################################
+
+class Jeu{
+    public:
+        vector<Point> vecteur_points{Point{-1, 0},Point{ 1, 0},Point{ 0, 1},Point{ 0, -1}};
+        Cell *cell1;
+        Cell *cell2;
+        
+        vector<Cell*> cells_a_effacer;
+        Jeu(Cell *cell1, Cell *cell2);
+        void tester_coup();
+        void appliquer_coup();
+        void effacer_bonbon();
+};
+
+Jeu::Jeu(Cell *cell1, Cell *cell2):cell1{cell1},cell2{cell2}{}
+
+void Jeu::effacer_bonbon(){
+    
+    for (auto &c:cells_a_effacer){
+        Fl_PNG_Image *sprite_explosion = new Fl_PNG_Image("sprite/explosion2.png");
+        Bonbon *newBonbon = new Bonbon{*sprite_explosion, "explosion"};
+        c->setBonbon(newBonbon);
+    }
+}
+
+void Jeu::tester_coup(){
+    // if (cell1->bonbon->nom_sprite == cell2->bonbon->nom_sprite){
+    //     cout << "bonbons idéntiques" << endl;
+    // }
+    
+    cell2->Inversion(cell1);
+    for (auto &p: vecteur_points){
+        Cell *cell_actuelle = cell2;
+        bool finished = false;
+        while(!finished){
+            bool trouve = false;
+            for(auto &voisin:cell_actuelle->neighbors){
+                if ((cell_actuelle->center.x)+(100*p.x) == voisin->center.x && (cell_actuelle->center.y)+(100*p.y) == voisin->center.y){
+                    if(cell_actuelle->bonbon->nom_sprite == voisin->bonbon->nom_sprite){
+                        if (cells_a_effacer.size() == 0){
+                            cells_a_effacer.push_back(cell_actuelle);
+                        }
+                        cells_a_effacer.push_back(voisin);
+                        cell_actuelle = voisin;
+                        trouve = true;
+                    }  
+                }
+            }
+            if (trouve == false)
+                finished = true;
+        }
+        
+    }
+    effacer_bonbon();
+    cout << cells_a_effacer.size() << endl;
+}
+
+
+//#############################################################
+
 class Animation{
     public:
     Cell *c;
@@ -73,20 +146,26 @@ class Animation{
 };
 
 string Animation::test_voisins_valide(Cell *cell2){
-    int test = -1;
-    for (int i = 0; i < 4; i++){
-        if (cell2->center.x == c->neighbors[i]->center.x && cell2->center.y == c->neighbors[i]->center.y){
-            test = i;
+    Point test;
+    for (auto &p: c->neighbors){
+        if (cell2->center.x == p->center.x && cell2->center.y == p->center.y){
+            test = p->center;
         }
     };
-    if (test == 0)
+    int position_voisin_x = (test.x - c->center.x)/100;
+    int position_voisin_y = (test.y - c->center.y)/100;
+    Point test2{position_voisin_x, position_voisin_y};
+
+    if (test2.x == -1 && test2.y == 0)
         return "g";
-    else if (test == 1)
+    else if (test2.x == 1 && test2.y == 0)
         return "d";
-    else if (test == 2)
+    else if (test2.x == 0 && test2.y == -1)
         return "h";
-    else if (test == 3)
+    else if (test2.x == 0 && test2.y == 1)
         return "b";
+    else
+        return "no";
 }
 
 void Animation::translation_bonbon(Cell *cell2){
@@ -97,28 +176,28 @@ void Animation::translation_bonbon(Cell *cell2){
         while (c->center.x != centre2.x){
             c->center.x-=1;
             cell2->center.x+=1;
-            Fl::wait(0.03);
+            Fl::wait(0.01);
         }
     }
     else if (ret == "d"){
         while (c->center.x != centre2.x){
             c->center.x+=1;
-            Fl::wait(0.03);
+            Fl::wait(0.01);
             cell2->center.x-=1;
         }
     }
     else if (ret == "h"){
         while (c->center.y != centre2.y){
-            c->center.y+=1;
-            Fl::wait(0.03);
-            cell2->center.y-=1;
+            c->center.y-=1;
+            Fl::wait(0.01);
+            cell2->center.y+=1;
         }
     }
     else if (ret == "b"){
         while (c->center.y != centre2.y){
-            c->center.y-=1;
-            Fl::wait(0.03);
-            cell2->center.y+=1;
+            c->center.y+=1;
+            Fl::wait(0.01);
+            cell2->center.y-=1;
         }
     }
 }
@@ -170,7 +249,6 @@ void Cell::Inversion(Cell *cell){
     Bonbon *bonbon1 = cell->bonbon;
     Bonbon *bonbon2 = bonbon;
     
-    
     cell->anim->translation_bonbon(this);
     cell->setBonbon(bonbon2);
     setBonbon(bonbon1);
@@ -197,8 +275,10 @@ void Cell::mouseClick(Point mouseLoc){
             }
               else if (bonbons_clicked == 2){
                 // cell1->anim->translation_bonbon(this);
-                
-                Inversion(cell1);
+                jeu = new Jeu(cell1, this);
+                jeu->tester_coup();
+                // Inversion(cell1);
+                // Inversion(cell1);
                 bonbons_clicked = 0;
                 setFillColor(FL_WHITE);
                 cell1->setFillColor(FL_WHITE);
@@ -213,9 +293,8 @@ void Cell::mouseClick(Point mouseLoc){
 //###########################################################
 
 
-
 //##########################################################
-
+// Code pour le vecteur de voisins pris dans le tp
 class Plateau{
     vector<string>bonbons{"sprite/1.png","sprite/2.png","sprite/3.png","sprite/4.png","sprite/5.png","sprite/6.png"};
     // vector<Cell> cells;
@@ -223,6 +302,7 @@ class Plateau{
 public:
     Plateau();
     void draw();
+    void tester_coup_plateau();
     void initialize_neighbours();
     void initialize_grid();
     void load_sprite();
@@ -244,7 +324,7 @@ void Plateau::initialize_grid(){
             int nbr_aleatoire = (rand() % bonbons.size());
             const char * nom_fichier = bonbons[nbr_aleatoire].c_str();
             Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-            Bonbon *newBonbon = new Bonbon{*sprite};
+            Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier};
             cells[x].push_back(Cell{Point{100*(x),100*(y)},100,100,newBonbon});
         }
     }
@@ -257,8 +337,8 @@ void Plateau::initialize_neighbours(){
             for (auto &shift: vector<Point>({
             {-1, 0}, // gauche // The 8 neighbors relative to the cell
             { 1, 0}, // droite
-            { 0, 1}, // haut
-            { 0, -1}, // bas
+            { 0, 1}, // bas
+            { 0, -1}, // haut
             {-1, 1},
             { 1, 1},
             { 1, -1},
