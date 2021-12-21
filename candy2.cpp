@@ -1,13 +1,3 @@
-//Hamza Hajjaj 000461105
-//Safouan Ehlalouch matricul
-//Projet LDP 2 Candy Crush
-
-/*
-Utiliser la méthode tester_coup sur tout le plateau à chaque fois et après avoir rajouter chaque cell dans le vectore verifier si la nouvelle
-cell a ajouter est déjà dans le vecteur ou non.
-Puis supprimer tout le vecteur d'un coup.
-*/
-
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Shared_Image.H>
@@ -30,7 +20,6 @@ const int windowHeight = 900;
 const double refreshPerSecond = 30;
 
 class Animation;
-class Jeu;
 
 struct Point
 {
@@ -43,17 +32,17 @@ class Bonbon
 public:
     string nom_sprite;
     Fl_PNG_Image &sprite;
-    Bonbon(Fl_PNG_Image &spri, string nom_sprite);
+    int id;
+    Bonbon(Fl_PNG_Image &spri, string nom_sprite, int id);
 };
 
-Bonbon::Bonbon(Fl_PNG_Image &spri, string nom_sprite) : sprite{spri}, nom_sprite{nom_sprite} {}
+Bonbon::Bonbon(Fl_PNG_Image &spri, string nom_sprite, int id) : sprite{spri}, nom_sprite{nom_sprite}, id{id} {}
 
 //#############################################################################
 
 class Cell
 {
 public:
-    Jeu *jeu;
     Animation *anim;
     bool on = false;
 
@@ -91,138 +80,6 @@ public:
     
 };
 
-class Jeu
-{
-public:
-    vector<vector<Point>> vecteur_points{{Point{-1, 0}, Point{1, 0}}, {Point{0, 1}, Point{0, -1}}};
-    Cell *cell1;
-
-    vector<Cell *> cells_a_effacer;
-    Jeu(Cell *cell1);
-    bool tester_coup();
-    void appliquer_coup();
-    void effacer_bonbon();
-    void remplir_plateau();
-};
-
-Jeu::Jeu(Cell *cell1) : cell1{cell1} {}
-
-void Jeu::remplir_plateau()
-{
-    Point bas{0, 1};
-    Point haut{0,-1};
-    Cell *cell_du_bas;
-    Cell *cell_du_haut;
-    for (auto &p : cell1->neighbors)
-    {
-        if (((p->center.x - cell1->center.x) / 100 == bas.x && (p->center.y - cell1->center.y) / 100 == bas.y) && p->bonbon->nom_sprite == "vide")
-        {
-            cell_du_bas = p;
-
-            // cell1->anim = new Animation{cell1};
-            // cell1->anim->translation_bonbon_vers_le_bas(cell_du_bas);
-            // delete cell1->anim;
-            cell_du_bas->setBonbon(cell1->bonbon);
-            // tant que la cell du haut n'est pas vide
-            // on échange les bonbons du haut vers le bas
-            bool finished = false;
-            // for (auto &cell : cell1->neighbors)
-            // {
-            //     while (!finished){ 
-            //        (cell->center.x - cell1->center.x) / 100 == haut.x && (cell->center.y - cell1->center.y) / 100 == haut.y) && cell->bonbon->nom_sprite == "vide") { //récupère cellule du haut
-                    
-            //        }
-            //     }
-
-            // }
-
-
-            cout << cell_du_bas->center.x << " et " << cell_du_bas->center.y << endl;
-        }
-    }
-    
-    // if(cell_du_bas->bonbon->nom_sprite == "vide"){
-        
-    // }
-}
-
-void Jeu::effacer_bonbon()
-{
-
-    for (auto &c : cells_a_effacer)
-    {
-        Fl_PNG_Image *sprite_explosion = new Fl_PNG_Image("sprite/explosion2.png");
-        Bonbon *newBonbon = new Bonbon{*sprite_explosion, "explosion"};
-        c->setBonbon(newBonbon);
-        // Fl::wait(1);
-        Fl_PNG_Image *vide = new Fl_PNG_Image(nullptr);
-        Bonbon *newBonbon2 = new Bonbon{*vide, "vide"};
-        c->setBonbon(newBonbon2);
-    }
-}
-
-bool Jeu::tester_coup()
-{
-    // cell2->Inversion(cell1);
-    int iteration_cote = 0; // Permet de savoir si on est horizontal ou vertical
-    for (auto &p : vecteur_points)
-    {
-        vector<Cell *> cell_provisoir;
-        for (auto &d : p)
-        {
-
-            iteration_cote++;
-            Cell *cell_actuelle = cell1;
-            bool finished = false;
-            while (!finished)
-            {
-                bool trouve = false;
-                for (auto &voisin : cell_actuelle->neighbors)
-                {
-                    if ((cell_actuelle->center.x) + (100 * d.x) == voisin->center.x && (cell_actuelle->center.y) + (100 * d.y) == voisin->center.y)
-                    {
-                        if (cell_actuelle->bonbon->nom_sprite == voisin->bonbon->nom_sprite) // si même bonbon
-                        {
-                            if (cell_provisoir.size() == 0) // si le bonbon cliqué n'est pas encore dans le vecteur
-                            {
-                                cell_provisoir.push_back(cell_actuelle);
-                            }
-                            cell_provisoir.push_back(voisin); 
-                            cell_actuelle = voisin;
-                            trouve = true;
-                        }
-                    }
-                }
-                if (trouve == false) // si on a pas trouvé de bonbon
-                    finished = true; 
-            }
-        }
-
-        if (cell_provisoir.size() >= 3) // si au minimum 3 bonbons identiques
-        {
-            for (auto &c : cell_provisoir)
-            {
-                if (!(find(cells_a_effacer.begin(), cells_a_effacer.end(), c) != cells_a_effacer.end())) // ne pas mettre le bonbon cliqué deux fois
-                {
-                    cells_a_effacer.push_back(c);
-                }
-            }
-        }
-        cell_provisoir.clear(); // clear le vecteur à la prochaine itération
-    }
-    effacer_bonbon();
-    if (cells_a_effacer.size() > 0)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-//#############################################################
-
 string Animation::test_voisins_valide(Cell *cell2)
 {
     Point test;
@@ -247,22 +104,6 @@ string Animation::test_voisins_valide(Cell *cell2)
         return "b";
     else
         return "no";
-}
-
-void Animation::translation_bonbon_vers_le_bas(Cell *cell2)
-{
-    Point centre1 = c->center;
-    Point centre2 = cell2->center;
-    string ret = test_voisins_valide(cell2); // retourne dans quelle direction est la cell2 par rapport à c
-    if (ret == "b") // si voisin du bas 
-    {
-        while (c->center.y != centre2.y)
-        {
-            c->center.y += 1;
-        }
-    }
-    cell2->setBonbon(c->bonbon);
-    c->center = cell2->center;
 }
 
 void Animation::translation_bidirectionnelle(Cell *cell2)
@@ -308,7 +149,9 @@ void Animation::translation_bidirectionnelle(Cell *cell2)
     }
 }
 
-Cell::Cell(Point center, int w, int h, Bonbon *bonbon, Fl_Color frameColor, Fl_Color fillColor) : center{center}, w{w}, h{h}, bonbon{bonbon}, anim{nullptr}, frameColor{frameColor}, fillColor{fillColor}
+//############################################################################
+
+Cell::Cell(Point center, int w, int h, Bonbon *bonbon, Fl_Color frameColor, Fl_Color fillColor) : center{center}, w{w}, h{h}, bonbon{bonbon}, frameColor{frameColor}, fillColor{fillColor}
 {
 }
 
@@ -318,21 +161,6 @@ void Cell::draw()
     // fl_draw_box(FL_BORDER_FRAME,center.x,center.y,w,h,frameColor);
     bonbon->sprite.draw(center.x, center.y, w, h);
     // jeu->tester_coup();
-}
-
-bool Cell::tester_plateau()
-{
-    bool valeur_de_retour = false;
-    jeu = new Jeu(this);
-    valeur_de_retour = jeu->tester_coup();
-    delete jeu;
-    return valeur_de_retour;
-}
-
-void Cell::finaliser_plateau(){
-    jeu = new Jeu(this);
-    jeu->remplir_plateau();
-    delete jeu;
 }
 
 void Cell::setNeighbors(const vector<Cell *> newNeighbors)
@@ -384,6 +212,7 @@ void Cell::Inversion(Cell *cell)
     //appel de la translation des deux bonbons
     cell->anim->translation_bidirectionnelle(this);
 
+
     //Inversion des references des bonbons dans les cells
     cell->setBonbon(bonbon2);
     setBonbon(bonbon1);
@@ -414,12 +243,6 @@ void Cell::mouseClick(Point mouseLoc)
         {
 
             Inversion(cell1);
-            reponse_test_plateau = tester_plateau();
-            if (!reponse_test_plateau)
-            {
-                anim = new Animation{this};
-                Inversion(cell1);
-            }
             bonbons_clicked = 0;
         }
         else
@@ -442,11 +265,9 @@ class Plateau
 public:
     Plateau();
     void draw();
-    void tester_coup_plateau();
     void initialize_neighbours();
+    void crush_plateau();
     void initialize_grid();
-    void load_sprite();
-    void test_plateau_initial();
     void mouseMove(Point mouseLoc);
     void mouseClick(Point mouseLoc);
     void keyPressed(int /*keyCode*/) { exit(0); }
@@ -456,7 +277,6 @@ Plateau::Plateau()
 {
     initialize_grid();
     initialize_neighbours();
-    test_plateau_initial();
 }
 void Plateau::initialize_grid()
 {
@@ -468,26 +288,79 @@ void Plateau::initialize_grid()
             int nbr_aleatoire = (rand() % bonbons.size());
             const char *nom_fichier = bonbons[nbr_aleatoire].c_str();
             Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-            Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier};
-            cells[x].push_back(Cell{Point{100 * (x), 100 * (y)}, 100, 100, newBonbon});
+            Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, nbr_aleatoire+1};
+            cells[x].push_back(Cell{Point{100 * (y), 100 * (x)}, 100, 100, newBonbon});
         }
     }
 }
 
-void Plateau::test_plateau_initial()
+void Plateau::crush_plateau()
 {
-    // Fl::wait(1);
-    for (auto &v : cells) // suppression des coups valides
-        for (auto &c : v)
+    bool done = true;
+
+    // pour crush les lignes
+    for (int r = 0; r < cells.size(); r++)
+    {
+        for (int c = 0; c < (cells[r].size()) - 2; c++)
         {
-            c.tester_plateau();
+            int num1 = abs(cells[r][c].bonbon->id);
+            int num2 = abs(cells[r][c + 1].bonbon->id);
+            int num3 = abs(cells[r][c + 2].bonbon->id);
+            if (num1 == num2 && num2 == num3 && num1 != 0)
+            {
+                cells[r][c].bonbon->id = -num1;
+                cells[r][c + 1].bonbon->id = -num2;
+                cells[r][c + 2].bonbon->id = -num3;
+                done = false;
+            }
         }
-    for (auto &v : cells) // faire tomber les bonbons dans les cells vides
-        for (auto &c : v)
+    }
+
+    //pour crush les colonnes
+    for (int c = 0; c < cells[0].size(); c++)
+    {
+        for (int r = 0; r < (cells.size()) - 2; r++)
         {
-            if(c.bonbon->nom_sprite != "vide")
-                c.finaliser_plateau();
+            int num1 = abs(cells[r][c].bonbon->id);
+            int num2 = abs(cells[r + 1][c].bonbon->id);
+            int num3 = abs(cells[r + 2][c].bonbon->id);
+            if (num1 == num2 && num2 == num3 && num1 != 0)
+            {
+                cells[r][c].bonbon->id = -num1;
+                cells[r + 1][c].bonbon->id = -num2;
+                cells[r + 2][c].bonbon->id = -num3;
+                done = false;
+            }
         }
+    }
+
+    if (!done)
+    {
+        for (int c = 0; c < cells[0].size(); c++)
+        {
+            // Descendre tous les bonbons positifs
+            int idx = cells.size() - 1;
+            for (int r = cells.size()-1; r != - 1; r--)
+            {
+                if (cells[r][c].bonbon->id > 0)
+                {
+                    cells[idx][c].setBonbon(cells[r][c].bonbon);
+                    idx -= 1;
+                }
+            }
+
+            //remplir les cases vide avec des bonbons vides
+            for(int r = idx; r != -1; r--){
+                // cells[r][c].bonbon->id = 0;
+                Fl_PNG_Image *sprite = new Fl_PNG_Image(nullptr);
+                Bonbon *newBonbon = new Bonbon{*sprite, "vide", 0};
+                cells[r][c].setBonbon(newBonbon);
+            }
+        }
+    }
+    if (!done){
+        crush_plateau();
+    }
 }
 
 void Plateau::initialize_neighbours()
@@ -545,9 +418,9 @@ void Plateau::mouseClick(Point mouseLoc)
         for (auto &c : v)
         {
             c.mouseClick(mouseLoc);
-            c.tester_plateau();
         }
     }
+    crush_plateau();
 }
 
 /* ------ DO NOT EDIT BELOW HERE (FOR NOW) ------ */
