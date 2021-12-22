@@ -23,6 +23,7 @@ class Cell
 public:
     Animation *anim;
     bool on = false;
+    bool tombe = false;
 
     Fl_Color frameColor;
     Fl_Color fillColor;
