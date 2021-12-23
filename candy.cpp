@@ -210,7 +210,6 @@ bool Jeu::tester_coup()
         }
         cell_provisoir.clear(); // clear le vecteur à la prochaine itération
     }
-    effacer_bonbon();
     if (cells_a_effacer.size() > 0)
     {
         return true;

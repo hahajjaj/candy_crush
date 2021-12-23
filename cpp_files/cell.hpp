@@ -24,6 +24,7 @@ public:
     Animation *anim;
     bool on = false;
     bool tombe = false;
+    
 
     Fl_Color frameColor;
     Fl_Color fillColor;
@@ -44,6 +45,7 @@ public:
     void setFillColor(Fl_Color newFillColor);
     void Inversion(Cell *cell);
     void setBonbon(Bonbon *newBonbon);
+    bool tester_coup(Cell* cell_p);
 };
 
 class Animation
@@ -58,7 +60,7 @@ public:
 };
 
 
-Cell::Cell(Point center, int w, int h, Bonbon *bonbon, Fl_Color frameColor, Fl_Color fillColor) : center{center}, w{w}, h{h}, bonbon{bonbon}, frameColor{frameColor}, fillColor{fillColor}
+Cell::Cell(Point center, int w, int h, Bonbon *bonbon, Fl_Color frameColor, Fl_Color fillColor): center{center}, w{w}, h{h}, bonbon{bonbon}, frameColor{frameColor}, fillColor{fillColor}
 {
 }
 
@@ -112,6 +114,7 @@ void Cell::setBonbon(Bonbon *newBonbon)
 
 void Cell::Inversion(Cell *cell)
 {
+
     //récupération des références des bonbon
     Bonbon *bonbon1 = cell->bonbon;
     Bonbon *bonbon2 = bonbon;
@@ -136,6 +139,7 @@ void Cell::Inversion(Cell *cell)
 void Cell::mouseClick(Point mouseLoc)
 {
     bool reponse_test_plateau = false;
+    bool reponse_test_plateau2 = false;
     static int bonbons_clicked;
     static Cell *cell1;
     if (contains(mouseLoc))
@@ -146,10 +150,17 @@ void Cell::mouseClick(Point mouseLoc)
             anim = new Animation{this};
             cell1 = this;
         }
-        else if (bonbons_clicked == 2 && cell1 != this)
+        else if (bonbons_clicked == 2 && cell1 != this) // si on a cliqué sur deux bonbons mais pas les m
         {
-
+            // if coup gagnan
             Inversion(cell1);
+            reponse_test_plateau = tester_coup(this);
+            reponse_test_plateau2 = tester_coup(cell1);
+            if ( (!reponse_test_plateau) && (!reponse_test_plateau2))
+            {
+                anim = new Animation{this};
+                Inversion(cell1);
+            }
             bonbons_clicked = 0;
         }
         else
@@ -257,5 +268,69 @@ void Animation::translation_bidirectionnelle(Cell *cell2)
             Fl::wait(0.01);
             cell2->center.y -= 1;
         }
+    }
+}
+
+bool Cell::tester_coup(Cell *cell_p)
+{
+    vector<vector<Point>> vecteur_points{{Point{-1, 0}, Point{1, 0}}, {Point{0, 1}, Point{0, -1}}};
+    Cell *cell1 = cell_p;
+
+    vector<Cell *> cells_a_effacer;
+
+
+    int iteration_cote = 0; // Permet de savoir si on est horizontal ou vertical
+    for (auto &p : vecteur_points)
+    {
+        vector<Cell *> cell_provisoir;
+        for (auto &d : p)
+        {
+
+            iteration_cote++;
+            Cell *cell_actuelle = cell1;
+            bool finished = false;
+            while (!finished)
+            {
+                bool trouve = false;
+                for (auto &voisin : cell_actuelle->neighbors)
+                {
+                    if ((cell_actuelle->center.x) + (100 * d.x) == voisin->center.x && (cell_actuelle->center.y) + (100 * d.y) == voisin->center.y)
+                    {
+                        if (cell_actuelle->bonbon->nom_sprite == voisin->bonbon->nom_sprite) // si même bonbon
+                        {
+                            if (cell_provisoir.size() == 0) // si le bonbon cliqué n'est pas encore dans le vecteur
+                            {
+                                cell_provisoir.push_back(cell_actuelle);
+                            }
+                            cell_provisoir.push_back(voisin); 
+                            cell_actuelle = voisin;
+                            trouve = true;
+                        }
+                    }
+                }
+                if (trouve == false) // si on a pas trouvé de bonbon
+                    finished = true; 
+            }
+        }
+
+        if (cell_provisoir.size() >= 3) // si au minimum 3 bonbons identiques
+        {
+            for (auto &c : cell_provisoir)
+            {
+                if (!(find(cells_a_effacer.begin(), cells_a_effacer.end(), c) != cells_a_effacer.end())) // ne pas mettre le bonbon cliqué deux fois
+                {
+                    cells_a_effacer.push_back(c);
+                }
+            }
+        }
+        cell_provisoir.clear(); // clear le vecteur à la prochaine itération
+    }
+    if (cells_a_effacer.size() > 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
