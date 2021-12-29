@@ -12,20 +12,24 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <unistd.h>
 
 #include "plateau.hpp"
+#include "acceuil.hpp"
 
 
 using namespace std;
 
 const int windowWidth = 900;
-const int windowHeight = 900;
+const int windowHeight = 1000;
 const double refreshPerSecond = 30;
 
 /* ------ DO NOT EDIT BELOW HERE (FOR NOW) ------ */
 class MainWindow : public Fl_Window
 {
     Plateau plateau;
+    Accueil acceuil_a_afficher;
+    bool affichage_ecran_acceuil = true;
 
 public:
     MainWindow() : Fl_Window(500, 500, windowWidth, windowHeight, "Candy Crush")
@@ -36,6 +40,13 @@ public:
     void draw() override
     {
         Fl_Window::draw();
+        if(affichage_ecran_acceuil){
+            acceuil_a_afficher.draw();
+            Fl::wait();
+            sleep(2);
+            affichage_ecran_acceuil = false;
+        }
+
         plateau.draw();
     }
     int handle(int event) override

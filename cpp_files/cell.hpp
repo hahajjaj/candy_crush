@@ -13,8 +13,8 @@
 #include <iostream>
 #include <algorithm>
 
-#include "point.hpp"
 #include "bonbon.hpp"
+#include "text_class.hpp"
 
 class Animation;
 

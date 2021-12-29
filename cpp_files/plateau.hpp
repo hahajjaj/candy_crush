@@ -12,8 +12,10 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <unistd.h>
 
 #include "cell.hpp"
+// #include "text_class.hpp"
 
 using namespace std;
 
@@ -23,7 +25,10 @@ class Plateau
     // vector<Cell> cells;
     vector<vector<Cell>> cells;
     bool coup_valide = false;
-    
+    int score = 0;
+    bool var = true;
+    bool plateau_stable = false;
+    bool plateau_stable2 = false;
 
 public:
     Plateau();
@@ -36,8 +41,10 @@ public:
     void transformer_en_bombe();
     void generer_bonbons();
     void afficher_plateau_terminal();
+    void gestion_de_score();
     void mouseMove(Point mouseLoc);
     void mouseClick(Point mouseLoc);
+    void rendre_plateau_stable();
     void keyPressed(int /*keyCode*/) { exit(0); }
 };
 
@@ -45,7 +52,17 @@ Plateau::Plateau()
 {
     initialize_grid();
     initialize_neighbours();
+    // ici on crush
 }
+
+void Plateau::gestion_de_score()
+{
+    string score_string = to_string(score);
+    Text affichage_score(score_string, {425, 940});
+    affichage_score.setFontSize(40);
+    affichage_score.draw();
+}
+
 void Plateau::initialize_grid()
 {
     for (int x = 0; x < 9; x++)
@@ -64,6 +81,7 @@ void Plateau::initialize_grid()
 
 void Plateau::selection_bonbon_tombe()
 {
+    int test = 0;
     for (int k = 0; k < 10; k++)
     {
         for (int y = 0; y < cells.size(); y++)
@@ -77,25 +95,37 @@ void Plateau::selection_bonbon_tombe()
                         if (cells[q][x].bonbon->id != 0)
                         {
                             cells[q][x].tombe = true;
+                            test++;
                         }
                     }
                 }
             }
         }
-
-        translation_plateau_vers_bas();
     }
+    translation_plateau_vers_bas();
 }
 
-void Plateau::generer_bonbons(){
-    for (int x = 0; x < cells[0].size(); x++){
-        if(cells[0][x].bonbon->id == 0){
+void Plateau::generer_bonbons()
+{
+    bool test = false;
+    for (int x = 0; x < cells[0].size(); x++)
+    {
+        if (cells[0][x].bonbon->id == 0)
+        {
+
             int nbr_aleatoire = (rand() % bonbons.size());
             const char *nom_fichier = bonbons[nbr_aleatoire].c_str();
             Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
             Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, nbr_aleatoire + 1};
             cells[0][x].setBonbon(newBonbon);
+            test = true;
         }
+    }
+    if (test){
+        plateau_stable = false;
+    }
+    else{
+        plateau_stable = true;
     }
 }
 
@@ -135,7 +165,7 @@ void Plateau::translation_plateau_vers_bas()
     //cas de toutes les autres lignes
     for (int y = cells.size() - 1; y > 1; y--)
     {
-        
+
         for (int x = 0; x < cells[0].size(); x++)
         {
             if (cells[y - 1][x].bonbon->id == 0 && cells[y - 2][x].bonbon->id != 0)
@@ -179,6 +209,8 @@ void Plateau::crush_plateau()
                 cells[r][c + 1].bonbon->id = -num2;
                 cells[r][c + 2].bonbon->id = -num3;
                 done = false;
+                plateau_stable2 = false;
+                plateau_stable = false;
                 coup_valide = true;
             }
         }
@@ -198,16 +230,15 @@ void Plateau::crush_plateau()
                 cells[r + 1][c].bonbon->id = -num2;
                 cells[r + 2][c].bonbon->id = -num3;
                 done = false;
+                plateau_stable2 = false;
+                plateau_stable = false;
                 coup_valide = true;
             }
         }
     }
-
-    transformer_en_bombe();
-    selection_bonbon_tombe();
-    generer_bonbons();
-    // afficher_plateau_terminal();
-
+    if(done){
+        plateau_stable2 = true;
+    }
 }
 
 void Plateau::afficher_plateau_terminal()
@@ -225,6 +256,7 @@ void Plateau::afficher_plateau_terminal()
 
 void Plateau::transformer_en_bombe()
 {
+    bool explosion = false;
     for (int y = 0; y < cells.size(); y++)
     {
         for (int x = 0; x < cells[0].size(); x++)
@@ -234,7 +266,9 @@ void Plateau::transformer_en_bombe()
                 Fl_PNG_Image *sprite_explosion = new Fl_PNG_Image("sprite/explosion2.png");
                 Bonbon *newBonbon = new Bonbon{*sprite_explosion, "explosion", -6};
                 cells[y][x].setBonbon(newBonbon);
-                Fl::wait(900000000);
+                score += 20;
+                explosion = true;
+                Fl::wait();
             }
         }
     }
@@ -285,6 +319,17 @@ void Plateau::initialize_neighbours()
     }
 }
 
+void Plateau::rendre_plateau_stable()
+{
+    crush_plateau(); // il met plateau stable 2 a false
+    transformer_en_bombe();
+    while (!plateau_stable)
+    {
+        selection_bonbon_tombe();
+        generer_bonbons();
+    }
+}
+
 void Plateau::draw()
 {
     for (auto &v : cells)
@@ -292,6 +337,7 @@ void Plateau::draw()
         {
             c.draw();
         }
+    gestion_de_score();
 }
 
 void Plateau::mouseMove(Point mouseLoc)
@@ -311,9 +357,10 @@ void Plateau::mouseClick(Point mouseLoc)
             c.mouseClick(mouseLoc);
         }
     }
-
-    for (int j = 0; j < 10; j++)
+    plateau_stable2 = false;;
+    while (!plateau_stable2)
     {
-        crush_plateau();
+        
+        rendre_plateau_stable();
     }
 }
