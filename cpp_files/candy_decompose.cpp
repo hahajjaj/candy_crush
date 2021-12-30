@@ -32,7 +32,8 @@ class MainWindow : public Fl_Window
     Plateau plateau;
     Accueil acceuil_a_afficher;
     int selection_ecran=1;
-    
+    bool crushed = true;
+
 
 public:
     bool affichage_ecran_acceuil = true;
@@ -51,11 +52,20 @@ public:
         }else{
             switch(selection_ecran){
                 case 1:
-                    plateau.draw();
+                    if (crushed){
+                        crushed = false;
+                        plateau.draw();
+                        plateau.rendre_plateau_stable();
+                        cout << "test" << endl;
+                        
+                    
+                    }
+                    else{
+                       plateau.draw(); 
+                    }
                     break;
             }
-            // plateau.draw();
-
+            
         }
 
     }
@@ -79,7 +89,6 @@ public:
     {
         MainWindow *o = (MainWindow *)userdata;
         if (o->affichage_ecran_acceuil){
-            cout << o->affichage_ecran_acceuil << endl;
             o->redraw();
             Fl::repeat_timeout(2, Timer_CB, userdata); // refaire chaque 2 seconde
             }
@@ -90,35 +99,10 @@ public:
         }
 
     }
-
-    static void Timer_CB2(void *userdata)
-    {
-        MainWindow *o = (MainWindow *)userdata;
-        //puts("THICK");
-        o->redraw();
-        //o->acceuil_a_afficher.draw();
-        Fl::repeat_timeout(2.0, Timer_CB2, userdata);
-    }
-
-    static void Timer_CB3(void *userdata){
-        
-         MainWindow *o = (MainWindow *)userdata;
-         if (o->affichage_ecran_acceuil){
-             o->redraw();
-             Fl::repeat_timeout(2, Timer_CB3, userdata);
-         }
-         else {
-             // écran pas affiché
-            bool var = true;
-            if (var){
-                Fl::repeat_timeout(2.0, Timer_CB3, userdata);
-                var = false;
-            }
-         }
         
         //o->acceuil_a_afficher.draw();
 
-    }
+    
 
     
 };

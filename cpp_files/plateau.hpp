@@ -15,6 +15,7 @@
 #include <unistd.h>
 
 #include "cell.hpp"
+#include "fichier.hpp"
 // #include "text_class.hpp"
 
 using namespace std;
@@ -29,6 +30,7 @@ class Plateau
     bool var = true;
     bool plateau_stable = false;
     bool plateau_stable2 = false;
+    bool is_anime = false;
 
 public:
     Plateau();
@@ -60,8 +62,25 @@ void Plateau::gestion_de_score()
 {
     string score_string = to_string(score);
     Text affichage_score(score_string, {425, 940});
+
+    
     affichage_score.setFontSize(40);
+    
+    Fichier *fichier = new Fichier();
+    string meilleur_score = fichier->lire_fichier();
+    
+    Text meilleur_score_text(meilleur_score, {600, 940});
+    meilleur_score_text.setFontSize(40);
+    int meilleure_score_int = stoi(meilleur_score); // reconverti le score string en int
+
+    if (score > meilleure_score_int){
+        meilleur_score_text.setString(score_string);
+        fichier->ecrire_fichier(score_string);
+        
+    }
+
     affichage_score.draw();
+    meilleur_score_text.draw();
 }
 
 void Plateau::initialize_grid()
@@ -80,12 +99,15 @@ void Plateau::initialize_grid()
     }
 }
 
-void Plateau::proposition_de_coup(){
+void Plateau::proposition_de_coup()
+{
     for (auto &v : cells)
         for (auto &c : v)
         {
-            for(auto &voisin: c.neighbors){
-                if(c.tester_coup(voisin)){
+            for (auto &voisin : c.neighbors)
+            {
+                if (c.tester_coup(voisin))
+                {
                     c.Inversion(voisin);
                     c.Inversion(voisin);
                     break;
@@ -136,10 +158,12 @@ void Plateau::generer_bonbons()
             test = true;
         }
     }
-    if (test){
+    if (test)
+    {
         plateau_stable = false;
     }
-    else{
+    else
+    {
         plateau_stable = true;
     }
 }
@@ -251,7 +275,8 @@ void Plateau::crush_plateau()
             }
         }
     }
-    if(done){
+    if (done)
+    {
         plateau_stable2 = true;
     }
 }
@@ -336,13 +361,20 @@ void Plateau::initialize_neighbours()
 
 void Plateau::rendre_plateau_stable()
 {
-    crush_plateau(); // il met plateau stable 2 a false
-    transformer_en_bombe();
-    while (!plateau_stable)
+    plateau_stable2 = false;
+    ;
+    while (!plateau_stable2)
     {
-        selection_bonbon_tombe();
-        generer_bonbons();
+        is_anime = true;
+        crush_plateau(); // il met plateau stable 2 a false
+        transformer_en_bombe();
+        while (!plateau_stable)
+        {
+            selection_bonbon_tombe();
+            generer_bonbons();
+        }
     }
+    is_anime = false;
 }
 
 void Plateau::draw()
@@ -365,17 +397,16 @@ void Plateau::mouseMove(Point mouseLoc)
 
 void Plateau::mouseClick(Point mouseLoc)
 {
-    for (auto &v : cells)
+    if(!is_anime){
+for (auto &v : cells)
     {
         for (auto &c : v)
         {
             c.mouseClick(mouseLoc);
         }
     }
-    plateau_stable2 = false;;
-    while (!plateau_stable2)
-    {
-        
-        rendre_plateau_stable();
+    rendre_plateau_stable();
     }
+    
+    
 }
