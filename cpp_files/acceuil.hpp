@@ -15,15 +15,20 @@
 
 using namespace std;
 
-class Accueil{
-    
-    
-    public:
+class Accueil
+{
+
+public:
     Accueil(){};
     void draw();
 };
 
-void Accueil::draw(){
-    Fl_PNG_Image image_accueil("sprite/1.png");
-    image_accueil.draw(500,500,400,400);
+void Accueil::draw()
+{
+    Fl_PNG_Image image_accueil("sprite/ecran_accueil_candy.png");
+    image_accueil.draw(0, 0);
+    Fl::wait();
+    sleep(1);
+    image_accueil.uncache();
+    
 };

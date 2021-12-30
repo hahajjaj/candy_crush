@@ -42,6 +42,7 @@ public:
     void generer_bonbons();
     void afficher_plateau_terminal();
     void gestion_de_score();
+    void proposition_de_coup();
     void mouseMove(Point mouseLoc);
     void mouseClick(Point mouseLoc);
     void rendre_plateau_stable();
@@ -77,6 +78,20 @@ void Plateau::initialize_grid()
             cells[x].push_back(Cell{Point{100 * (y), 100 * (x)}, 100, 100, newBonbon});
         }
     }
+}
+
+void Plateau::proposition_de_coup(){
+    for (auto &v : cells)
+        for (auto &c : v)
+        {
+            for(auto &voisin: c.neighbors){
+                if(c.tester_coup(voisin)){
+                    c.Inversion(voisin);
+                    c.Inversion(voisin);
+                    break;
+                }
+            }
+        }
 }
 
 void Plateau::selection_bonbon_tombe()

@@ -42,8 +42,9 @@ public:
         Fl_Window::draw();
         if(affichage_ecran_acceuil){
             acceuil_a_afficher.draw();
-            Fl::wait();
-            sleep(2);
+            
+            // Fl::wait();
+            // sleep(2);
             affichage_ecran_acceuil = false;
         }
 
