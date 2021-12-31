@@ -38,8 +38,11 @@ class Plateau
     Fichier *fichier;
     string nom_niveau;
     bool niveau_choix;
-
+    Bonbon *quitter;
 public:
+    bool *test;
+    int *selection_ecran;
+
     Plateau(){};
     void draw();
     void inisialisation(bool choix_niveau);
@@ -98,10 +101,13 @@ void Plateau::charger_niveau()
             i++;
         }
     }
+    Fl_PNG_Image *sprite = new Fl_PNG_Image("elements_graphique/exit.png");
+    quitter = new Bonbon{*sprite, "exit", 0};
 }
 
 void Plateau::inisialisation(bool choix_niveau)
 {
+
     niveau_choix = choix_niveau;
     if (choix_niveau)
     {
@@ -136,12 +142,12 @@ void Plateau::gestion_de_score()
     string score_string = to_string(score);
     string phrase_score = "SCORE : " + score_string;
     affichage_score->setString(phrase_score);
-    cout << phrase_score << endl;
+
 
     //affichage du meilleur score
     string phrase_meilleur_score = "Meilleur score : " + to_string(meilleur_score);
 
-    cout << phrase_meilleur_score << endl;
+
 
     if (score >= meilleur_score)
     {   var = true;
@@ -168,6 +174,8 @@ void Plateau::initialize_grid()
             cells[x].push_back(Cell{Point{100 * (y), 100 * (x)}, 100, 100, newBonbon});
         }
     }
+    Fl_PNG_Image *sprite = new Fl_PNG_Image("elements_graphique/exit.png");
+    quitter = new Bonbon{*sprite, "exit", 0};
 }
 
 void Plateau::proposition_de_coup()
@@ -472,6 +480,7 @@ void Plateau::draw()
         {
             c.draw();
         }
+    quitter->sprite.draw(820, 917);
     if (!niveau_choix)
     {
 
@@ -489,8 +498,14 @@ void Plateau::mouseMove(Point mouseLoc)
 
 void Plateau::mouseClick(Point mouseLoc)
 {
+    
     if (!is_anime)
     {
+        if(mouseLoc.x >= 820 && mouseLoc.x < 820 + quitter->sprite.w() && mouseLoc.y >= 917 && mouseLoc.y < 917 + quitter->sprite.h()){
+        *test = true;
+        *selection_ecran = 1;
+
+    }
         for (auto &v : cells)
         {
             for (auto &c : v)

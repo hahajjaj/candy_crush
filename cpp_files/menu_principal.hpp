@@ -28,11 +28,12 @@ struct buttonn{
 class menu_principal
 {
     vector <buttonn> buttons;
-    
+    Fl_PNG_Image *background_menu;
     public:
     int *selection_ecran;
     menu_principal();
     void draw();
+    void init_background();
     void init_button();
     void mouseMove(Point mouseLoc);
     void mouseClick(Point mouseLoc);
@@ -41,19 +42,34 @@ class menu_principal
 
 
 menu_principal::menu_principal(){
-
+    init_background();
     init_button();
 }
 
+void menu_principal::init_background(){
+    background_menu = new Fl_PNG_Image("elements_graphique/background_menu.png");
+}
+
 void menu_principal::init_button(){
-    for(int i = 0; i < 4; i++){
-        Fl_PNG_Image *image_accueil = new Fl_PNG_Image("sprite/1.png");
-        buttonn b{{300, i * 200}, image_accueil, i+1};
-        buttons.push_back(b);
-    }
+
+    //boutton lancement partie
+    Fl_PNG_Image *nv_partie = new Fl_PNG_Image("elements_graphique/1.png");
+    buttonn nouvelle_partie{{250, 420}, nv_partie, 2};
+    buttons.push_back(nouvelle_partie);
+
+    //boutton charger un niveau
+    Fl_PNG_Image *selec_niveau = new Fl_PNG_Image("elements_graphique/2.png");
+    buttonn selection_niveau{{250, 589}, selec_niveau, 3};
+    buttons.push_back(selection_niveau);
+
+    //boutton editeur de niveau
+    Fl_PNG_Image *edit_niveau = new Fl_PNG_Image("elements_graphique/3.png");
+    buttonn editeur_niveau_niveau{{250, 727}, edit_niveau, 2};
+    buttons.push_back(editeur_niveau_niveau);
 }
 
 void menu_principal::draw(){
+    background_menu->draw(0,0);
     for (auto &b: buttons){
         b.image_accueil->draw(b.center.x, b.center.y);
     }
@@ -64,7 +80,7 @@ void menu_principal::mouseMove(Point mouseLoc){
 }
 
 void menu_principal::mouseClick(Point mouseLoc){
-    for (int i = 0; i < 4; i++){
+    for (int i = 0; i < buttons.size(); i++){
         bool ok = buttons[i].contains(mouseLoc);
         cout << ok << endl;
         if (ok){

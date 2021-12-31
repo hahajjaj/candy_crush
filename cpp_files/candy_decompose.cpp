@@ -33,6 +33,8 @@ class MainWindow : public Fl_Window
     int selection_ecran = 1;
     menu_principal menu;
     bool crushed = true;
+    // bool partie_lance = false;
+    bool test = false;
 
 public:
     bool affichage_ecran_acceuil = true;
@@ -41,7 +43,26 @@ public:
         Fl::add_timeout(1.0 / refreshPerSecond, Timer_CB, this);
         resizable(this);
         menu.selection_ecran = &selection_ecran;
+        plateau.selection_ecran = &selection_ecran;
+        plateau.test = &test;
     }
+
+    void remettre_plateau_zero_noniveau(){
+        if(test){
+            // partie_lance = false;
+            test = false;
+            crushed = true;
+            // (&plateau)->~Plateau();
+            // new (&plateau) Plateau();
+            plateau = Plateau();
+            plateau.selection_ecran = &selection_ecran;
+            plateau.test = &test;
+            cout << "click" << endl;
+            
+        }
+        
+    }
+
     void draw() override
     {
 
@@ -62,6 +83,7 @@ public:
 
                 if (crushed)
                 {
+                    // partie_lance = true;
                     plateau.inisialisation(false); // pas de choix de niveau
                     crushed = false;
                     plateau.draw();
@@ -75,6 +97,7 @@ public:
             case 3:
                 if (crushed)
                 {
+                    // partie_lance = true;
                     plateau.inisialisation(true); // choix de niveau
                     crushed = false;
                     plateau.draw();
@@ -117,6 +140,7 @@ public:
                 return 1;
             case FL_PUSH:
                 plateau.mouseClick(Point{Fl::event_x(), Fl::event_y()});
+                remettre_plateau_zero_noniveau();
                 return 1;
             case FL_KEYDOWN:
                 plateau.keyPressed(Fl::event_key());
@@ -134,6 +158,8 @@ public:
                 return 1;
             case FL_PUSH:
                 plateau.mouseClick(Point{Fl::event_x(), Fl::event_y()});
+                remettre_plateau_zero_noniveau();
+
                 return 1;
             case FL_KEYDOWN:
                 plateau.keyPressed(Fl::event_key());
