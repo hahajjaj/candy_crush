@@ -1,9 +1,9 @@
 - faire les murs
 - fl drag
-- impossible
+- impossible                                        FAIT
 - glaçage
 - Bonbons spéciaux
-- niveaux et selections de niveaux
+- niveaux et selections de niveaux                  FAIT
 - objectifs
 - editeur de tableau
 - niveaux et ingredients

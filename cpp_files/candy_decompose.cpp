@@ -16,7 +16,7 @@
 
 #include "plateau.hpp"
 #include "acceuil.hpp"
-
+#include "menu_principal.hpp"
 
 using namespace std;
 
@@ -24,16 +24,14 @@ const int windowWidth = 900;
 const int windowHeight = 1000;
 const double refreshPerSecond = 30;
 
- 
-
 /* ------ DO NOT EDIT BELOW HERE (FOR NOW) ------ */
 class MainWindow : public Fl_Window
 {
     Plateau plateau;
     Accueil acceuil_a_afficher;
-    int selection_ecran=1;
+    menu_principal menu;
+    int selection_ecran = 3;
     bool crushed = true;
-
 
 public:
     bool affichage_ecran_acceuil = true;
@@ -44,30 +42,49 @@ public:
     }
     void draw() override
     {
-        
+
         Fl_Window::draw();
-        if(affichage_ecran_acceuil){
+        if (affichage_ecran_acceuil)
+        {
             acceuil_a_afficher.draw();
             affichage_ecran_acceuil = false;
-        }else{
-            switch(selection_ecran){
-                case 1:
-                    if (crushed){
-                        crushed = false;
-                        plateau.draw();
-                        plateau.rendre_plateau_stable();
-                        cout << "test" << endl;
-                        
-                    
-                    }
-                    else{
-                       plateau.draw(); 
-                    }
-                    break;
-            }
-            
         }
+        else
+        {
+            switch (selection_ecran)
+            {
+            case 1:
+                menu.show();
+                break;
+            case 2:
 
+                if (crushed)
+                {
+                    plateau.inisialisation(false);
+                    crushed = false;
+                    plateau.draw();
+                    plateau.rendre_plateau_stable();
+                }
+                else
+                {
+                    plateau.draw();
+                }
+                break;
+            case 3:
+                if (crushed)
+                {
+                    plateau.inisialisation(true);
+                    crushed = false;
+                    plateau.draw();
+                    plateau.rendre_plateau_stable();
+                }
+                else
+                {
+                    plateau.draw();
+                }
+                break;
+            }
+        }
     }
     int handle(int event) override
     {
@@ -88,23 +105,19 @@ public:
     static void Timer_CB(void *userdata)
     {
         MainWindow *o = (MainWindow *)userdata;
-        if (o->affichage_ecran_acceuil){
+        if (o->affichage_ecran_acceuil)
+        {
             o->redraw();
-            Fl::repeat_timeout(2, Timer_CB, userdata); // refaire chaque 2 seconde
-            }
+            Fl::repeat_timeout(1, Timer_CB, userdata); // refaire chaque 2 seconde
+        }
         else
         {
             o->redraw();
             Fl::repeat_timeout(1.0 / refreshPerSecond, Timer_CB, userdata);
         }
-
     }
-        
-        //o->acceuil_a_afficher.draw();
 
-    
-
-    
+    //o->acceuil_a_afficher.draw();
 };
 
 int main(int argc, char *argv[])

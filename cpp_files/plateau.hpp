@@ -13,6 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <unistd.h>
+#include <fstream>
 
 #include "cell.hpp"
 #include "fichier.hpp"
@@ -27,22 +28,31 @@ class Plateau
     vector<vector<Cell>> cells;
     bool coup_valide = false;
     int score = 0;
+    int meilleur_score = 0;
     bool var = true;
     bool plateau_stable = false;
     bool plateau_stable2 = false;
     bool is_anime = false;
+    Text *affichage_score;
+    Text *meilleur_score_text;
+    Fichier *fichier;
+    string nom_niveau;
+    bool niveau_choix;
 
 public:
-    Plateau();
+    Plateau(){};
     void draw();
+    void inisialisation(bool choix_niveau);
     void initialize_neighbours();
     void crush_plateau();
+    void charger_niveau();
     void initialize_grid();
     void translation_plateau_vers_bas();
     void selection_bonbon_tombe();
     void transformer_en_bombe();
     void generer_bonbons();
     void afficher_plateau_terminal();
+    void initialisation_score();
     void gestion_de_score();
     void proposition_de_coup();
     void mouseMove(Point mouseLoc);
@@ -51,36 +61,94 @@ public:
     void keyPressed(int /*keyCode*/) { exit(0); }
 };
 
-Plateau::Plateau()
+// Plateau::Plateau()
+// {
+//     initialize_grid();
+//     initialize_neighbours();
+//     fichier = new Fichier();
+//     string meilleur_score_fichier = fichier->lire_fichier();
+//     meilleur_score = stoi(meilleur_score_fichier);
+//     initialisation_score();
+// }
+
+void Plateau::charger_niveau()
 {
-    initialize_grid();
+    ifstream myfile;
+    myfile.open("levels/niveau1.txt");
+    nom_niveau = "niveau1.txt";
+    string matrice;
+    cells.push_back({});
+    if (myfile.is_open())
+    {
+        int i = 0;
+        int j = 0;
+        while (myfile.good())
+        {
+            if (i == 9)
+            {
+                i = 0;
+                j += 1;
+                cells.push_back({});
+            }
+            myfile >> matrice;
+            const char *nom_fichier = bonbons[stoi(matrice)].c_str();
+            Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
+            Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, stoi(matrice) + 1};
+            cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
+            i++;
+        }
+    }
+}
+
+void Plateau::inisialisation(bool choix_niveau)
+{
+    niveau_choix = choix_niveau;
+    if (choix_niveau)
+    {
+        charger_niveau();
+    }
+    else
+    {
+        initialize_grid();
+        fichier = new Fichier();
+        string meilleur_score_fichier = fichier->lire_fichier();
+        meilleur_score = stoi(meilleur_score_fichier);
+        initialisation_score();
+    }
     initialize_neighbours();
-    // ici on crush
+}
+
+void Plateau::initialisation_score()
+{
+
+    affichage_score = new Text("0", {150, 880});
+    affichage_score->setFontSize(30);
+
+    string phrase_meilleur_score = "Meilleur score : " + to_string(meilleur_score);
+    meilleur_score_text = new Text("", {510, 880});
+    meilleur_score_text->setString(phrase_meilleur_score);
+    meilleur_score_text->setFontSize(30);
 }
 
 void Plateau::gestion_de_score()
 {
+    //affichage du score actuel
     string score_string = to_string(score);
-    Text affichage_score(score_string, {425, 940});
+    string phrase_score = "SCORE : " + score_string;
+    affichage_score->setString(phrase_score);
 
-    
-    affichage_score.setFontSize(40);
-    
-    Fichier *fichier = new Fichier();
-    string meilleur_score = fichier->lire_fichier();
-    
-    Text meilleur_score_text(meilleur_score, {600, 940});
-    meilleur_score_text.setFontSize(40);
-    int meilleure_score_int = stoi(meilleur_score); // reconverti le score string en int
+    //affichage du meilleur score
+    string phrase_meilleur_score = "Meilleur score : " + to_string(meilleur_score);
 
-    if (score > meilleure_score_int){
-        meilleur_score_text.setString(score_string);
+    if (score >= meilleur_score)
+    {
+        meilleur_score = score;
+        meilleur_score_text->setString(to_string(meilleur_score));
         fichier->ecrire_fichier(score_string);
-        
     }
 
-    affichage_score.draw();
-    meilleur_score_text.draw();
+    affichage_score->draw();
+    meilleur_score_text->draw();
 }
 
 void Plateau::initialize_grid()
@@ -101,7 +169,9 @@ void Plateau::initialize_grid()
 
 void Plateau::proposition_de_coup()
 {
+    bool test = false;
     for (auto &v : cells)
+    {
         for (auto &c : v)
         {
             for (auto &voisin : c.neighbors)
@@ -110,10 +180,25 @@ void Plateau::proposition_de_coup()
                 {
                     c.Inversion(voisin);
                     c.Inversion(voisin);
+                    test = true;
                     break;
                 }
             }
         }
+    }
+    if (!test)
+    {
+        for (auto &v : cells)
+        {
+            for (auto &c : v)
+            {
+                Fl_PNG_Image *sprite_explosion = new Fl_PNG_Image(nullptr);
+                Bonbon *newBonbon = new Bonbon{*sprite_explosion, "vide", 0};
+                c.setBonbon(newBonbon);
+            }
+        }
+        rendre_plateau_stable();
+    }
 }
 
 void Plateau::selection_bonbon_tombe()
@@ -384,7 +469,11 @@ void Plateau::draw()
         {
             c.draw();
         }
-    gestion_de_score();
+    if (!niveau_choix)
+    {
+
+        gestion_de_score();
+    }
 }
 
 void Plateau::mouseMove(Point mouseLoc)
@@ -397,16 +486,15 @@ void Plateau::mouseMove(Point mouseLoc)
 
 void Plateau::mouseClick(Point mouseLoc)
 {
-    if(!is_anime){
-for (auto &v : cells)
+    if (!is_anime)
     {
-        for (auto &c : v)
+        for (auto &v : cells)
         {
-            c.mouseClick(mouseLoc);
+            for (auto &c : v)
+            {
+                c.mouseClick(mouseLoc);
+            }
         }
+        rendre_plateau_stable();
     }
-    rendre_plateau_stable();
-    }
-    
-    
 }

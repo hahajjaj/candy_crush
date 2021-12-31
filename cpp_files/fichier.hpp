@@ -13,22 +13,21 @@ class Fichier
     string score;
 
 public:
+    Fichier(){
+        lire_fichier();
+    }
+
     string lire_fichier()
     {
         ifstream fichier("score.txt");
 
-        if (fichier)
+        if (!fichier)
         {
-            getline(fichier, score);
+            ofstream outfile {"score.txt"};
+            outfile << "0";
         }
 
-        else
-        {
-            cout << "Impossible d'ouvvrir le fichier" << endl;
-        }
-
-        cout << " le score : " << endl;
-
+        getline(fichier, score);
         return score;
     }
 
@@ -39,11 +38,7 @@ public:
 
         if (fich)
         {
-            fich << nouveauscore << endl;
-        }
-        else
-        {
-            cout << "ERREUR: Impossible d'ouvrir le fichier." << endl;
+            fich << nouveauscore;
         }
     }
 };
