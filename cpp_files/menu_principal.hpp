@@ -13,31 +13,69 @@
 
 using namespace std;
 
-class menu_principal
-{
-    public:
-    // void button_cb(Fl_Widget *, void *);
-    menu_principal(){
-    }
-    static void button_cb(Fl_Widget *obj, void *);
-    void show();
+struct buttonn{
+    Point center;
+    Fl_PNG_Image *image_accueil;
+    int ecran;
+
+    bool contains(Point p){
+    return p.x >= center.x && p.x < center.x + image_accueil->w() && p.y >= center.y && p.y < center.y + image_accueil->h();
+}
 };
 
-void menu_principal::show()
+
+
+class menu_principal
 {
-    Fl_PNG_Image *img = new Fl_PNG_Image("sprite/1.png");
-    Fl_Button *partie_simple = new Fl_Button(0, 0, img->w(), img->h(),"nouvelle partie");
-    partie_simple->image(img);
-    partie_simple->callback(button_cb);
-    // partie_simple->redraw();
+    vector <buttonn> buttons;
+    
+    public:
+    int *selection_ecran;
+    menu_principal();
+    void draw();
+    void init_button();
+    void mouseMove(Point mouseLoc);
+    void mouseClick(Point mouseLoc);
+    buttonn contains(Point p);
+};
+
+
+menu_principal::menu_principal(){
+
+    init_button();
+}
+
+void menu_principal::init_button(){
+    for(int i = 0; i < 4; i++){
+        Fl_PNG_Image *image_accueil = new Fl_PNG_Image("sprite/1.png");
+        buttonn b{{300, i * 200}, image_accueil, i+1};
+        buttons.push_back(b);
+    }
+}
+
+void menu_principal::draw(){
+    for (auto &b: buttons){
+        b.image_accueil->draw(b.center.x, b.center.y);
+    }
+}
+
+void menu_principal::mouseMove(Point mouseLoc){
 
 }
 
-void menu_principal::button_cb(Fl_Widget *obj, void *)
+void menu_principal::mouseClick(Point mouseLoc){
+    for (int i = 0; i < 4; i++){
+        bool ok = buttons[i].contains(mouseLoc);
+        cout << ok << endl;
+        if (ok){
+            
+            *selection_ecran = buttons[i].ecran; // boutton clické
+            cout << "clické " << endl;
+        }
+    
+    }
 
-{
-    obj->label("OFF");
-    // obj->redraw();
-
-    //  obj->resize( 0,0,40,40 );
+    
 }
+
+

@@ -29,8 +29,9 @@ class MainWindow : public Fl_Window
 {
     Plateau plateau;
     Accueil acceuil_a_afficher;
+    
+    int selection_ecran = 1;
     menu_principal menu;
-    int selection_ecran = 3;
     bool crushed = true;
 
 public:
@@ -39,6 +40,7 @@ public:
     {
         Fl::add_timeout(1.0 / refreshPerSecond, Timer_CB, this);
         resizable(this);
+        menu.selection_ecran = &selection_ecran;
     }
     void draw() override
     {
@@ -53,14 +55,14 @@ public:
         {
             switch (selection_ecran)
             {
-            case 1:
-                menu.show();
+            case 1: // menu principal
+                menu.draw();
                 break;
             case 2:
 
                 if (crushed)
                 {
-                    plateau.inisialisation(false);
+                    plateau.inisialisation(false); // pas de choix de niveau
                     crushed = false;
                     plateau.draw();
                     plateau.rendre_plateau_stable();
@@ -73,7 +75,7 @@ public:
             case 3:
                 if (crushed)
                 {
-                    plateau.inisialisation(true);
+                    plateau.inisialisation(true); // choix de niveau
                     crushed = false;
                     plateau.draw();
                     plateau.rendre_plateau_stable();
@@ -88,20 +90,61 @@ public:
     }
     int handle(int event) override
     {
-        switch (event)
+        switch (selection_ecran)
         {
-        case FL_MOVE:
-            plateau.mouseMove(Point{Fl::event_x(), Fl::event_y()});
-            return 1;
-        case FL_PUSH:
-            plateau.mouseClick(Point{Fl::event_x(), Fl::event_y()});
-            return 1;
-        case FL_KEYDOWN:
-            plateau.keyPressed(Fl::event_key());
-            return 1;
+        case 1:
+        {
+            switch (event)
+            {
+            case FL_MOVE:
+                menu.mouseMove(Point{Fl::event_x(), Fl::event_y()});
+                return 1;
+            case FL_PUSH:
+                menu.mouseClick(Point{Fl::event_x(), Fl::event_y()});
+                return 1;
+            // case FL_KEYDOWN:
+            //     plateau.keyPressed(Fl::event_key());
+            //     return 1;
+            }
+        }
+        break;
+        case 2:
+        {
+            switch (event)
+            {
+            case FL_MOVE:
+                plateau.mouseMove(Point{Fl::event_x(), Fl::event_y()});
+                return 1;
+            case FL_PUSH:
+                plateau.mouseClick(Point{Fl::event_x(), Fl::event_y()});
+                return 1;
+            case FL_KEYDOWN:
+                plateau.keyPressed(Fl::event_key());
+                return 1;
+            }
+        }
+        break;
+
+        case 3:
+        {
+            switch (event)
+            {
+            case FL_MOVE:
+                plateau.mouseMove(Point{Fl::event_x(), Fl::event_y()});
+                return 1;
+            case FL_PUSH:
+                plateau.mouseClick(Point{Fl::event_x(), Fl::event_y()});
+                return 1;
+            case FL_KEYDOWN:
+                plateau.keyPressed(Fl::event_key());
+                return 1;
+            }
+        }
+        break;
         }
         return 0;
     }
+
     static void Timer_CB(void *userdata)
     {
         MainWindow *o = (MainWindow *)userdata;

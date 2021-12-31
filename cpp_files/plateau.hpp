@@ -136,14 +136,17 @@ void Plateau::gestion_de_score()
     string score_string = to_string(score);
     string phrase_score = "SCORE : " + score_string;
     affichage_score->setString(phrase_score);
+    cout << phrase_score << endl;
 
     //affichage du meilleur score
     string phrase_meilleur_score = "Meilleur score : " + to_string(meilleur_score);
 
+    cout << phrase_meilleur_score << endl;
+
     if (score >= meilleur_score)
-    {
+    {   var = true;
         meilleur_score = score;
-        meilleur_score_text->setString(to_string(meilleur_score));
+        meilleur_score_text->setString(phrase_meilleur_score);
         fichier->ecrire_fichier(score_string);
     }
 
