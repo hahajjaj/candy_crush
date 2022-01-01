@@ -39,6 +39,7 @@ class Plateau
     string nom_niveau;
     bool niveau_choix;
     Bonbon *quitter;
+    Fl_PNG_Image * fond_case;
 public:
     bool *test;
     int *selection_ecran;
@@ -107,6 +108,8 @@ void Plateau::charger_niveau()
 
 void Plateau::inisialisation(bool choix_niveau)
 {
+
+    fond_case = new Fl_PNG_Image("elements_graphique/case.png");
 
     niveau_choix = choix_niveau;
     if (choix_niveau)
@@ -475,9 +478,12 @@ void Plateau::rendre_plateau_stable()
 
 void Plateau::draw()
 {
+    Point p;
     for (auto &v : cells)
         for (auto &c : v)
         {
+            p = {c.center.x, c.center.y};
+            fond_case->draw(p.x, p.y);
             c.draw();
         }
     quitter->sprite.draw(820, 917);
