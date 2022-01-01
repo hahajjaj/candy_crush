@@ -29,7 +29,6 @@ class Plateau
     bool coup_valide = false;
     int score = 0;
     int meilleur_score = 0;
-    bool var = true;
     bool plateau_stable = false;
     bool plateau_stable2 = false;
     bool is_anime = false;
@@ -39,7 +38,9 @@ class Plateau
     string nom_niveau;
     bool niveau_choix;
     Bonbon *quitter;
-    Fl_PNG_Image * fond_case;
+    Fl_PNG_Image *fond_case;
+    Fl_PNG_Image *background;
+
 public:
     bool *test;
     int *selection_ecran;
@@ -108,8 +109,9 @@ void Plateau::charger_niveau()
 
 void Plateau::inisialisation(bool choix_niveau)
 {
-
-    fond_case = new Fl_PNG_Image("elements_graphique/case.png");
+    srand(10);
+    fond_case = new Fl_PNG_Image("elements_graphique/case3.png");
+    background = new Fl_PNG_Image("elements_graphique/background_partie.png");
 
     niveau_choix = choix_niveau;
     if (choix_niveau)
@@ -130,33 +132,25 @@ void Plateau::inisialisation(bool choix_niveau)
 void Plateau::initialisation_score()
 {
 
-    affichage_score = new Text("0", {150, 880});
+    affichage_score = new Text("0", {150, 920});
     affichage_score->setFontSize(30);
 
-    string phrase_meilleur_score = "Meilleur score : " + to_string(meilleur_score);
-    meilleur_score_text = new Text("", {510, 880});
-    meilleur_score_text->setString(phrase_meilleur_score);
+    meilleur_score_text = new Text(("Meilleur score : " + to_string(meilleur_score)), {510, 920});
     meilleur_score_text->setFontSize(30);
 }
 
 void Plateau::gestion_de_score()
 {
     //affichage du score actuel
-    string score_string = to_string(score);
-    string phrase_score = "SCORE : " + score_string;
-    affichage_score->setString(phrase_score);
-
+    affichage_score->setString(("score : " + to_string(score)));
 
     //affichage du meilleur score
-    string phrase_meilleur_score = "Meilleur score : " + to_string(meilleur_score);
-
-
 
     if (score >= meilleur_score)
-    {   var = true;
+    {
         meilleur_score = score;
-        meilleur_score_text->setString(phrase_meilleur_score);
-        fichier->ecrire_fichier(score_string);
+        meilleur_score_text->setString("Meilleur score : " + to_string(meilleur_score));
+        fichier->ecrire_fichier(to_string(score));
     }
 
     affichage_score->draw();
@@ -407,10 +401,11 @@ void Plateau::transformer_en_bombe()
                 cells[y][x].setBonbon(newBonbon);
                 score += 20;
                 explosion = true;
-                Fl::wait();
+                Fl::wait(1);
             }
         }
     }
+    
     for (int y = 0; y < cells.size(); y++)
     {
         for (int x = 0; x < cells[0].size(); x++)
@@ -478,12 +473,18 @@ void Plateau::rendre_plateau_stable()
 
 void Plateau::draw()
 {
-    Point p;
+    background->draw(0, 0);
+    for (int x = 0; x < 9; x++)
+    {
+        for (int y = 0; y < 9; y++)
+        {
+            fond_case->draw(100 * y, 100 * x);
+        }
+    }
+
     for (auto &v : cells)
         for (auto &c : v)
         {
-            p = {c.center.x, c.center.y};
-            fond_case->draw(p.x, p.y);
             c.draw();
         }
     quitter->sprite.draw(820, 917);
@@ -504,14 +505,14 @@ void Plateau::mouseMove(Point mouseLoc)
 
 void Plateau::mouseClick(Point mouseLoc)
 {
-    
+
     if (!is_anime)
     {
-        if(mouseLoc.x >= 820 && mouseLoc.x < 820 + quitter->sprite.w() && mouseLoc.y >= 917 && mouseLoc.y < 917 + quitter->sprite.h()){
-        *test = true;
-        *selection_ecran = 1;
-
-    }
+        if (mouseLoc.x >= 820 && mouseLoc.x < 820 + quitter->sprite.w() && mouseLoc.y >= 917 && mouseLoc.y < 917 + quitter->sprite.h())
+        {
+            *test = true;
+            *selection_ecran = 1;
+        }
         for (auto &v : cells)
         {
             for (auto &c : v)

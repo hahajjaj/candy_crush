@@ -63,7 +63,7 @@ void menu_principal::init_button(){
     buttons.push_back(selection_niveau);
 
     //boutton editeur de niveau
-    Fl_PNG_Image *edit_niveau = new Fl_PNG_Image("elements_graphique/3.png");
+    Fl_PNG_Image *edit_niveau = new Fl_PNG_Image("elements_graphique/4.png");
     buttonn editeur_niveau_niveau{{250, 727}, edit_niveau, 2};
     buttons.push_back(editeur_niveau_niveau);
 }

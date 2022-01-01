@@ -22,7 +22,7 @@ using namespace std;
 
 const int windowWidth = 900;
 const int windowHeight = 1000;
-const double refreshPerSecond = 30;
+const double refreshPerSecond = 25;
 
 /* ------ DO NOT EDIT BELOW HERE (FOR NOW) ------ */
 class MainWindow : public Fl_Window
