@@ -22,22 +22,20 @@
 using namespace std;
 
 class Plateau
-{   
+{
     //vecteur de fichiers
     vector<string> bonbons{"sprite/1.png", "sprite/2.png", "sprite/3.png", "sprite/4.png", "sprite/5.png", "sprite/6.png"};
 
-    vector<string> nom_bonbon_ligne{"sprite_speciaux/lignes/1_h.png","sprite_speciaux/lignes/2_h.png","sprite_speciaux/lignes/3_h.png","sprite_speciaux/lignes/4_h.png", "sprite_speciaux/lignes/5_h.png","sprite_speciaux/lignes/6_h.png"};
-    vector<string> nom_bonbon_vertical{"sprite_speciaux/lignes/1_v.png","sprite_speciaux/lignes/2_v.png","sprite_speciaux/lignes/3_v.png", "sprite_speciaux/lignes/4_v.png","sprite_speciaux/lignes/5_v.png","sprite_speciaux/lignes/6_v.png"};
-    vector<string> nom_bonbon_sachet{"sprite_speciaux/sachets/1_s.png","sprite_speciaux/sachets/2_s.png","sprite_speciaux/sachets/3_s.png", "sprite_speciaux/lignes/4_s.png","sprite_speciaux/sachets/5_s.png","sprite_speciaux/sachets/6_s.png"};
+    vector<string> nom_bonbon_ligne{"sprite_speciaux/lignes/1_h.png", "sprite_speciaux/lignes/2_h.png", "sprite_speciaux/lignes/3_h.png", "sprite_speciaux/lignes/4_h.png", "sprite_speciaux/lignes/5_h.png", "sprite_speciaux/lignes/6_h.png"};
+    vector<string> nom_bonbon_vertical{"sprite_speciaux/lignes/1_v.png", "sprite_speciaux/lignes/2_v.png", "sprite_speciaux/lignes/3_v.png", "sprite_speciaux/lignes/4_v.png", "sprite_speciaux/lignes/5_v.png", "sprite_speciaux/lignes/6_v.png"};
+    vector<string> nom_bonbon_sachet{"sprite_speciaux/sachets/1_s.png", "sprite_speciaux/sachets/2_s.png", "sprite_speciaux/sachets/3_s.png", "sprite_speciaux/lignes/4_s.png", "sprite_speciaux/sachets/5_s.png", "sprite_speciaux/sachets/6_s.png"};
 
     ///vecteur de bonbons speciaux
-    vector<Fl_PNG_Image*> bonbons_ligne;
-    vector<Fl_PNG_Image*> bonbons_vertical;
-    vector<Fl_PNG_Image*> bonbons_sachets;
+    vector<Fl_PNG_Image *> bonbons_ligne;
+    vector<Fl_PNG_Image *> bonbons_vertical;
+    vector<Fl_PNG_Image *> bonbons_sachets;
 
-    //png pour le glacage
-    Fl_PNG_Image *glacage;
-
+    
     //vecteur de cells
     vector<vector<Cell>> cells;
     bool coup_valide = false;
@@ -74,6 +72,7 @@ public:
     string detecter_form();
     void afficher_plateau_terminal();
     void initialisation_score();
+    void translation_diagonal();
     void gestion_de_score();
     void proposition_de_coup();
     void mouseMove(Point mouseLoc);
@@ -92,24 +91,10 @@ public:
 //     initialisation_score();
 // }
 
-
-string detecter_form(){
-    vector <vector <Cell>> ligne_negatif;
-
-    for (int i = 0; i < cells.size(); i++){
-        for (int col = 0; i < cells[i].size();){
-            if (cells[j][col].bonbon->id < 0){ 
-            ligne_negatif.push_back(cells[i]);}
-
-        }
-    }
-
-    for (int i = 0; i < ligne_negatif.size())
-
-}
-
-void Plateau::charger_sprite(){
-    for (int i = 0; i < 6; i++){
+void Plateau::charger_sprite()
+{
+    for (int i = 0; i < 6; i++)
+    {
         Fl_PNG_Image *image = new Fl_PNG_Image(nom_bonbon_ligne[i].c_str());
         bonbons_ligne.push_back(image);
 
@@ -119,14 +104,13 @@ void Plateau::charger_sprite(){
         Fl_PNG_Image *image3 = new Fl_PNG_Image(nom_bonbon_sachet[i].c_str());
         bonbons_sachets.push_back(image3);
     }
-
-    glacage = new Fl_PNG_Image("sprite/glacage.png");
 }
 
 void Plateau::charger_niveau()
 {
+    const char *nom_fichier;
     ifstream myfile;
-    myfile.open("levels/niveau1.txt");
+    myfile.open("levels/niveau2.txt");
     nom_niveau = "niveau1.txt";
     string matrice;
     cells.push_back({});
@@ -143,14 +127,22 @@ void Plateau::charger_niveau()
                 cells.push_back({});
             }
             myfile >> matrice;
-            if(matrice != "/"){
-                const char *nom_fichier = bonbons[stoi(matrice)].c_str();
-            }else{
-                const char *nom_fichier = "sprite/glacage.png";
+            if (matrice != "/")
+            {
+                nom_fichier = bonbons[stoi(matrice)].c_str();
+                Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
+                Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, stoi(matrice) + 1};
+                cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
             }
-            Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-            Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, stoi(matrice) + 1};
-            cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
+            else
+            {
+                nom_fichier = "sprite/mur2.png";
+                Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
+                Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, 9};
+                newBonbon->special = true;
+                cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
+            }
+
             i++;
         }
     }
@@ -263,6 +255,7 @@ void Plateau::proposition_de_coup()
 
 void Plateau::selection_bonbon_tombe()
 {
+    bool test2 = false; // test si encore des bonbons qui tombent
     int test = 0;
     for (int k = 0; k < 10; k++)
     {
@@ -276,15 +269,30 @@ void Plateau::selection_bonbon_tombe()
                     {
                         if (cells[q][x].bonbon->id != 0)
                         {
+                            if (cells[q][x].bonbon->special)
+                            {
+                                break;
+                            }
                             cells[q][x].tombe = true;
                             test++;
+                            test = true;
                         }
                     }
                 }
             }
         }
     }
+    if (test)
+    {
+        plateau_stable = false;
+    }
+    else
+    {
+        plateau_stable = true;
+    }
+    afficher_plateau_terminal();
     translation_plateau_vers_bas();
+    translation_diagonal();
 }
 
 void Plateau::generer_bonbons()
@@ -300,16 +308,102 @@ void Plateau::generer_bonbons()
             Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
             Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, nbr_aleatoire + 1};
             cells[0][x].setBonbon(newBonbon);
-            test = true;
+            plateau_stable = false;
         }
     }
-    if (test)
+}
+
+void Plateau::translation_diagonal()
+{
+    int i = 0;
+    while (i < 100)
     {
-        plateau_stable = false;
+        for (int y = 0; y < cells.size() - 1; y++)
+        {
+            for (int x = 0; x < cells[0].size(); x++)
+            {
+
+                
+                if (cells[y][x].bonbon->id != 0 && !cells[y][x].bonbon->special)
+                {
+                    // si la diagonale a gauche et a droite est vide 
+                    // if (x != cells.size() - 1 && x != 0 && !cells[y][x + 2].bonbon->special && cells[y][x + 2].bonbon-> && cells[y + 1][x + 1].bonbon->id == 0)
+                    // {
+
+                    //     if (cells[y][x + 1].bonbon->special)
+                    //     {
+                    //         cells[y][x].bonbon->diagonal = true;
+                    //         cells[y][x].center.y += 1;
+                    //         cells[y][x].center.x += 1;
+                            
+                    //         Fl::wait(0.00016);
+                    //     }
+                    // }
+
+                    // diagonal vers la droite quand on est pas sur la dernière colonne
+                     if (x != cells.size() - 1 && cells[y + 1][x + 1].bonbon->id == 0)
+                    {
+
+                        if (cells[y][x + 1].bonbon->special)
+                        {
+                            cells[y][x].bonbon->diagonal = true;
+                            cells[y][x].center.y += 1;
+                            cells[y][x].center.x += 1;
+                            
+                            Fl::wait(0.00016);
+                        }
+                    }
+                    
+                    
+
+                    //diagonal à gauche quand on est pas sur la première colonne
+                    else if (x != 0)
+                    {
+                        if (cells[y][x - 1].bonbon->special && cells[y + 1][x - 1].bonbon->id == 0)
+                        {
+                            cells[y][x].bonbon->diagonal = true;
+                            cells[y][x].bonbon->gauche = true;
+                            cells[y][x].center.y += 1;
+                            cells[y][x].center.x -= 1;
+                            Fl::wait(0.00016);
+                            
+                        }
+                    }
+                }
+            }
+        }
+        i++;
     }
-    else
+
+    for (int y = 0; y < cells.size() - 1; y++)
     {
-        plateau_stable = true;
+        for (int x = 0; x < cells[0].size(); x++ )
+        {
+            if (cells[y][x].bonbon->diagonal)
+            {
+                if (cells[y][x].bonbon->gauche)
+                {
+                    cells[y][x].bonbon->gauche = false;
+                    cells[y][x].bonbon->diagonal = false;
+                    cells[y+1][x-1].setBonbon(cells[y][x].bonbon);
+                    cells[y][x].center.y -= 100;
+                    cells[y][x].center.x += 100;
+                    Fl_PNG_Image *sprite = new Fl_PNG_Image(nullptr);
+                    Bonbon *newBonbon = new Bonbon{*sprite, "vide", 0};
+                    cells[y][x].setBonbon(newBonbon);
+                }
+                else
+                {
+                    cells[y][x].bonbon->diagonal = false;
+                    cells[y+1][x+1].setBonbon(cells[y][x].bonbon);
+                    cells[y][x].center.y -= 100;
+                    cells[y][x].center.x -= 100;
+                    Fl_PNG_Image *sprite = new Fl_PNG_Image(nullptr);
+                    Bonbon *newBonbon = new Bonbon{*sprite, "vide", 0};
+                    cells[y][x].setBonbon(newBonbon);
+                }
+            }
+        }
     }
 }
 
@@ -352,7 +446,7 @@ void Plateau::translation_plateau_vers_bas()
 
         for (int x = 0; x < cells[0].size(); x++)
         {
-            if (cells[y - 1][x].bonbon->id == 0 && cells[y - 2][x].bonbon->id != 0)
+            if (cells[y - 1][x].bonbon->id == 0 && !cells[y - 2][x].bonbon->special && cells[y - 2][x].bonbon->id != 0)
             {
 
                 cells[y - 1][x].setBonbon(cells[y - 2][x].bonbon);
@@ -433,7 +527,7 @@ void Plateau::afficher_plateau_terminal()
     {
         for (int x = 0; x < cells[0].size(); x++)
         {
-            cout << cells[y][x].bonbon->id << " ";
+            cout << cells[y][x].tombe << "  ";
         }
         cout << endl;
     }
@@ -457,7 +551,7 @@ void Plateau::transformer_en_bombe()
             }
         }
     }
-    
+
     for (int y = 0; y < cells.size(); y++)
     {
         for (int x = 0; x < cells[0].size(); x++)
@@ -569,7 +663,11 @@ void Plateau::mouseClick(Point mouseLoc)
         {
             for (auto &c : v)
             {
-                c.mouseClick(mouseLoc);
+                if (!c.bonbon->special)
+                {
+
+                    c.mouseClick(mouseLoc);
+                }
             }
         }
         rendre_plateau_stable();
