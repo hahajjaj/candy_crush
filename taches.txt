@@ -1,9 +1,6 @@
-- faire les murs                                    FAIT
 - fl drag
 - impossible                                        FAIT
-- glaçage
 - Bonbons spéciaux
-- niveaux et selections de niveaux                  FAIT
-- objectifs
 - editeur de tableau
-- niveaux et ingredients
+
+ajouter dans chaque fichier de niveau les objectifs et coups maximums
