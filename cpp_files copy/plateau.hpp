@@ -40,7 +40,7 @@ class Plateau
     bool coup_valide = false;
     
     //valeurs booleennes qui permettent de tester si le plateau est crushé et remplie ou non
-    bool plateau_stable = false;
+    bool chute_bonbons = false;
     bool plateau_stable2 = false;
 
     //Booleen qui permet d'empecher le joueur de jouer tant qu'une animation est en cours
@@ -61,6 +61,11 @@ class Plateau
     Fl_PNG_Image *fond_case;
     Fl_PNG_Image *background;
 
+    Fl_PNG_Image *logo_glacage;
+    Fl_PNG_Image *logo_cerises;
+
+    Fl_PNG_Image *check;
+
     //affichage du texte
     Text *affichage_score;
     Text *meilleur_score_text;
@@ -75,6 +80,7 @@ class Plateau
     int glacage_restant = 0;
     int bonbon_restant = 0;
     int cerise_restante = 0;
+    int objectif_score = 0;
     
     //les scores
     int score = 0;
@@ -103,6 +109,7 @@ public:
     string detecter_form();
     void afficher_plateau_terminal();
     void initialisation_score();
+    void test_ingredient_derniere_ligne();
     void translation_diagonal();
     void gestion_de_score();
     void proposition_de_coup();
@@ -175,6 +182,14 @@ void Plateau::charger_niveau()
                 cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
                 glacage_restant +=1;
             }
+            else if(matrice == "c"){
+                nom_fichier = "sprite/cerises.png";
+                Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
+                Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, 102};
+                newBonbon->is_cerises = true;
+                cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
+                cerise_restante +=1;
+            }
             else
             {
                 nom_fichier = bonbons[stoi(matrice)].c_str();
@@ -194,10 +209,13 @@ void Plateau::inisialisation(bool choix_niveau)
 {
     charger_sprite();
     if(choix_niveau){
-        affichage_bonbons_restant = new Text(("Bonbons restants" + bonbon_restant), {950, 100},40);
-        affichage_glacage_restant = new Text(("Glacages restants" + to_string(glacage_restant)), {950, 400},30);
-        affichage_cerise_restante = new Text(("cerises restantes" ), {920, 700}, 40);
-        affichage_coup_restant = new Text(("cerises restantes" ), {920, 900},40);
+        check = new Fl_PNG_Image("elements_graphique/check2.png");
+        affichage_bonbons_restant = new Text(to_string(bonbon_restant), {1050, 100},40);
+        affichage_glacage_restant = new Text(to_string(glacage_restant), {1080, 450},40);
+        logo_glacage = new Fl_PNG_Image("sprite/glacage3.png");
+        logo_cerises = new Fl_PNG_Image("sprite/cerises.png");
+        affichage_cerise_restante = new Text(to_string(cerise_restante), {1080, 570}, 40);
+        affichage_coup_restant = new Text(to_string(coup_restant), {920, 900},40);
         
     }
     srand(10);
@@ -253,14 +271,31 @@ void Plateau::affichage_objectifs(){
         affichage_coup_restant->setString(("Bonbons restants" + bonbon_restant));
         affichage_coup_restant->draw();
     }
+
+
     if(cerise_restante > 0){
-        affichage_cerise_restante->setString(("cerises restantes" ));
+        affichage_cerise_restante->setString(to_string(cerise_restante));
+        logo_cerises->draw(950, 520, 100, 100);
         affichage_cerise_restante->draw();
     }
+    else{
+        check->draw(1050, 520);
+        logo_cerises->draw(950, 520);
+    }
+
+
     if(glacage_restant > 0){
-        affichage_glacage_restant->setString(("Glacages restants :" + to_string(glacage_restant)));
+        affichage_glacage_restant->setString(to_string(glacage_restant));
+        logo_glacage->draw(950, 400, 100, 100);
         affichage_glacage_restant->draw();
     }
+    else{
+        check->draw(1050, 400);
+        logo_glacage->draw(950, 400);
+
+    }
+
+
     if(bonbon_restant > 0){
         affichage_bonbons_restant->setString(("Bonbons restants" + bonbon_restant));
         affichage_bonbons_restant->draw();
@@ -319,11 +354,20 @@ void Plateau::proposition_de_coup()
     }
 }
 
+void Plateau::test_ingredient_derniere_ligne(){
+    for(int x = 0; x < cells.size(); x++){
+        if(cells[cells.size()-1][x].bonbon->is_cerises){
+            cells[cells.size()-1][x].bonbon->id = -1;
+            cerise_restante -= 1;
+        }
+    }
+}
+
 void Plateau::selection_bonbon_tombe()
 {
-    bool reste_bonbon_a_descendre = false;
-    for (int k = 0; k < 10; k++)
-    {
+    chute_bonbons = false;
+    bool reste_bonbon_a_descendre = true;
+   
         for (int y = 0; y < cells.size(); y++)
         {
             for (int x = 0; x < cells[0].size(); x++)
@@ -339,21 +383,23 @@ void Plateau::selection_bonbon_tombe()
                                 break;
                             }
                             cells[q][x].tombe = true;
-                            reste_bonbon_a_descendre = true;
+                            chute_bonbons = true;
+                            cout << "pas fini" << endl;
+                            // reste_bonbon_a_descendre = true;
                         }
                     }
                 }
             }
         }
-    }
-    if (reste_bonbon_a_descendre)
-    {
-        plateau_stable = false;
-    }
-    else
-    {
-        plateau_stable = true;
-    }
+        
+    
+    // if(reste_bonbon_a_descendre == false){
+    //         chute_bonbons = true;
+    //         cout << "fini !!" << endl;
+            
+    //     }else{
+    //         chute_bonbons = false;
+    //     }
     afficher_plateau_terminal();
     translation_plateau_vers_bas();
     translation_diagonal();
@@ -371,7 +417,7 @@ void Plateau::generer_bonbons()
             Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
             Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, nbr_aleatoire + 1};
             cells[0][x].setBonbon(newBonbon);
-            plateau_stable = false;
+            chute_bonbons = true;
         }
     }
 }
@@ -437,6 +483,7 @@ void Plateau::translation_diagonal()
                     Fl_PNG_Image *sprite = new Fl_PNG_Image(nullptr);
                     Bonbon *newBonbon = new Bonbon{*sprite, "vide", 0};
                     cells[y][x].setBonbon(newBonbon);
+                    chute_bonbons = true;
                 }
                 else
                 {
@@ -447,6 +494,7 @@ void Plateau::translation_diagonal()
                     Fl_PNG_Image *sprite = new Fl_PNG_Image(nullptr);
                     Bonbon *newBonbon = new Bonbon{*sprite, "vide", 0};
                     cells[y][x].setBonbon(newBonbon);
+                    chute_bonbons = true;
                 }
             }
         }
@@ -542,7 +590,8 @@ void Plateau::crush_plateau()
             int num1 = abs(cells[r][c].bonbon->id);
             int num2 = abs(cells[r][c + 1].bonbon->id);
             int num3 = abs(cells[r][c + 2].bonbon->id);
-            if (num1 == num2 && num2 == num3 && num1 != 0)
+            //ici dans le test, l'id 102 représente celui de la cerise
+            if (num1 == num2 && num2 == num3 && num1 != 0 && num1 != 102)
             {
                 vector<Cell> cells_a_teste;
 
@@ -555,7 +604,7 @@ void Plateau::crush_plateau()
 
                 done = false;
                 plateau_stable2 = false;
-                plateau_stable = false;
+                chute_bonbons = true;
                 coup_valide = true;
                 for (auto &c : cells_a_teste)
                 {
@@ -581,7 +630,7 @@ void Plateau::crush_plateau()
             int num1 = abs(cells[r][c].bonbon->id);
             int num2 = abs(cells[r + 1][c].bonbon->id);
             int num3 = abs(cells[r + 2][c].bonbon->id);
-            if (num1 == num2 && num2 == num3 && num1 != 0)
+            if (num1 == num2 && num2 == num3 && num1 != 0  && num1 != 102)
             {
                 vector<Cell> cells_a_teste;
                 
@@ -593,7 +642,7 @@ void Plateau::crush_plateau()
                 cells_a_teste.push_back(cells[r+2][c]);
                 done = false;
                 plateau_stable2 = false;
-                plateau_stable = false;
+                chute_bonbons = true;
                 coup_valide = true;
 
                 for (auto &c : cells_a_teste)
@@ -699,13 +748,13 @@ void Plateau::initialize_neighbours()
 void Plateau::rendre_plateau_stable()
 {
     plateau_stable2 = false;
-    ;
     while (!plateau_stable2)
     {
         is_anime = true;
         crush_plateau(); // il met plateau stable 2 a false
+        test_ingredient_derniere_ligne();
         transformer_en_bombe();
-        while (!plateau_stable)
+        while (chute_bonbons)
         {
             selection_bonbon_tombe();
             generer_bonbons();

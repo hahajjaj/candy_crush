@@ -15,6 +15,7 @@ public:
     bool diagonal = false;
     bool gauche = false;
     bool is_glacage = false;
+    bool is_cerises = false;
     Bonbon(Fl_PNG_Image &spri, string nom_sprite, int id);
 };
 
