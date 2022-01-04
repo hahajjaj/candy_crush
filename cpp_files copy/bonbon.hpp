@@ -14,6 +14,7 @@ public:
     bool special = false;
     bool diagonal = false;
     bool gauche = false;
+    bool is_glacage = false;
     Bonbon(Fl_PNG_Image &spri, string nom_sprite, int id);
 };
 

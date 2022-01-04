@@ -24,6 +24,7 @@ public:
     Animation *anim;
     bool on = false;
     bool tombe = false;
+    bool is_selectionne = false;
     
 
     Fl_Color frameColor;
@@ -39,7 +40,7 @@ public:
     void finaliser_plateau();
     void setNeighbors(const vector<Cell *> newNeighbors);
     void mouseMove(Point mouseLoc);
-    void mouseClick(Point mouseLoc);
+    void mouseClick(Point mouseLoc, int &coup_restant);
     bool contains(Point p);
     void setFrameColor(Fl_Color newFrameColor);
     void setFillColor(Fl_Color newFillColor);
@@ -136,7 +137,7 @@ void Cell::Inversion(Cell *cell)
     delete anim;
 }
 
-void Cell::mouseClick(Point mouseLoc)
+void Cell::mouseClick(Point mouseLoc,int &coup_restant)
 {
     bool reponse_test_plateau = false;
     bool reponse_test_plateau2 = false;
@@ -144,6 +145,7 @@ void Cell::mouseClick(Point mouseLoc)
     static Cell *cell1;
     if (contains(mouseLoc))
     {
+        
         bonbons_clicked++;
         if (bonbons_clicked == 1)
         {
@@ -160,6 +162,9 @@ void Cell::mouseClick(Point mouseLoc)
             {
                 anim = new Animation{this};
                 Inversion(cell1);
+            }
+            else{
+                coup_restant -=1;
             }
             bonbons_clicked = 0;
         }

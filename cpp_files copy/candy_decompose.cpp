@@ -17,10 +17,11 @@
 #include "plateau.hpp"
 #include "acceuil.hpp"
 #include "menu_principal.hpp"
+#include "selecteur_niveau.hpp"
 
 using namespace std;
 
-const int windowWidth = 900;
+const int windowWidth = 1200;
 const int windowHeight = 1000;
 const double refreshPerSecond = 25;
 
@@ -29,12 +30,16 @@ class MainWindow : public Fl_Window
 {
     Plateau plateau;
     Accueil acceuil_a_afficher;
-    
-    int selection_ecran = 1;
     menu_principal menu;
+    selecteur_niveau selec_niveau;
+
+    int selection_ecran = 1;
+
+    string file_name;
+
     bool crushed = true;
     // bool partie_lance = false;
-    bool test = false;
+    bool bool_quitter_partie = false;
 
 public:
     bool affichage_ecran_acceuil = true;
@@ -44,23 +49,25 @@ public:
         resizable(this);
         menu.selection_ecran = &selection_ecran;
         plateau.selection_ecran = &selection_ecran;
-        plateau.test = &test;
+        selec_niveau.selection_ecran = &selection_ecran;
+        selec_niveau.file_name = &file_name;
+        plateau.bool_quitter_partie = &bool_quitter_partie;
     }
 
-    void remettre_plateau_zero_noniveau(){
-        if(test){
+    void remettre_plateau_zero_noniveau()
+    {
+        if (bool_quitter_partie)
+        {
             // partie_lance = false;
-            test = false;
+            bool_quitter_partie = false;
             crushed = true;
             // (&plateau)->~Plateau();
             // new (&plateau) Plateau();
             plateau = Plateau();
             plateau.selection_ecran = &selection_ecran;
-            plateau.test = &test;
+            plateau.bool_quitter_partie = &bool_quitter_partie;
             cout << "click" << endl;
-            
         }
-        
     }
 
     void draw() override
@@ -79,6 +86,8 @@ public:
             case 1: // menu principal
                 menu.draw();
                 break;
+            
+
             case 2:
 
                 if (crushed)
@@ -94,10 +103,16 @@ public:
                     plateau.draw();
                 }
                 break;
+            
             case 3:
+                selec_niveau.draw();
+                break;
+
+            case 4:
                 if (crushed)
                 {
                     // partie_lance = true;
+                    plateau.file_name = &file_name;
                     plateau.inisialisation(true); // choix de niveau
                     crushed = false;
                     plateau.draw();
@@ -125,9 +140,9 @@ public:
             case FL_PUSH:
                 menu.mouseClick(Point{Fl::event_x(), Fl::event_y()});
                 return 1;
-            // case FL_KEYDOWN:
-            //     plateau.keyPressed(Fl::event_key());
-            //     return 1;
+                // case FL_KEYDOWN:
+                //     plateau.keyPressed(Fl::event_key());
+                //     return 1;
             }
         }
         break;
@@ -150,6 +165,23 @@ public:
         break;
 
         case 3:
+        {
+            switch (event)
+            {
+            case FL_MOVE:
+                selec_niveau.mouseMove(Point{Fl::event_x(), Fl::event_y()});
+                return 1;
+            case FL_PUSH:
+                selec_niveau.mouseClick(Point{Fl::event_x(), Fl::event_y()});
+                return 1;
+                // case FL_KEYDOWN:
+                //     plateau.keyPressed(Fl::event_key());
+                //     return 1;
+            }
+        }
+        break;
+
+        case 4:
         {
             switch (event)
             {

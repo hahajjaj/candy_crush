@@ -82,11 +82,9 @@ void menu_principal::mouseMove(Point mouseLoc){
 void menu_principal::mouseClick(Point mouseLoc){
     for (int i = 0; i < buttons.size(); i++){
         bool ok = buttons[i].contains(mouseLoc);
-        cout << ok << endl;
         if (ok){
             
             *selection_ecran = buttons[i].ecran; // boutton clické
-            cout << "clické " << endl;
         }
     
     }
