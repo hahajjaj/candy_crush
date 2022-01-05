@@ -51,7 +51,7 @@ selecteur_niveau::selecteur_niveau()
 
 void selecteur_niveau::init_background()
 {
-    background_menu = new Fl_PNG_Image("elements_graphique/background_menu.png");
+    background_menu = new Fl_PNG_Image("elements_graphique/fond_ecran3.png");
 }
 
 void selecteur_niveau::init_button()

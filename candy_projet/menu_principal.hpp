@@ -47,24 +47,24 @@ menu_principal::menu_principal(){
 }
 
 void menu_principal::init_background(){
-    background_menu = new Fl_PNG_Image("elements_graphique/background_menu.png");
+    background_menu = new Fl_PNG_Image("elements_graphique/fond_ecran3.png");
 }
 
 void menu_principal::init_button(){
 
     //boutton lancement partie
     Fl_PNG_Image *nv_partie = new Fl_PNG_Image("elements_graphique/1.png");
-    buttonn nouvelle_partie{{250, 420}, nv_partie, 2};
+    buttonn nouvelle_partie{{450, 420}, nv_partie, 2};
     buttons.push_back(nouvelle_partie);
 
     //boutton charger un niveau
     Fl_PNG_Image *selec_niveau = new Fl_PNG_Image("elements_graphique/2.png");
-    buttonn selection_niveau{{250, 589}, selec_niveau, 3};
+    buttonn selection_niveau{{450, 589}, selec_niveau, 3};
     buttons.push_back(selection_niveau);
 
     //boutton editeur de niveau
     Fl_PNG_Image *edit_niveau = new Fl_PNG_Image("elements_graphique/4.png");
-    buttonn editeur_niveau_niveau{{250, 727}, edit_niveau, 2};
+    buttonn editeur_niveau_niveau{{450, 727}, edit_niveau, 2};
     buttons.push_back(editeur_niveau_niveau);
 }
 

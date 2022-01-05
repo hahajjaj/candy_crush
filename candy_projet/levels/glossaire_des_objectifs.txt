@@ -1,0 +1,4 @@
+r10 = il faut finir le niveau en maximum 10 coups
+b315 = il faut effacer 15 bonbon représenté par l'indice 3 dans le vecteur de bonbons
+g = il faut effacer tout les glaçage
+f = il faut faire descendre tout les fruits sur la dernière ligne (ici il ne s'agira que des cerises pour le projet)

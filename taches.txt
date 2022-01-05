@@ -3,4 +3,5 @@
 - Bonbons spéciaux
 - editeur de tableau
 
-ajouter dans chaque fichier de niveau les objectifs et coups maximums
+ajouter glacage double couche
+ajouter un ecran de game over et de partie gagné (si partie gagné, passage automatique au niveau suivant)
