@@ -68,8 +68,6 @@ class Plateau
 
     Fl_PNG_Image *check;
 
-    
-
     //affichage du texte
     Text *affichage_score;
     Text *meilleur_score_text;
@@ -88,9 +86,9 @@ class Plateau
     int bonbon_restant = 0;
     int cerise_restante = 0;
     int objectif_score = 0;
-    
+
     bool limite_coup = false;
-    
+
     //les scores
     int score = 0;
     int meilleur_score = 0;
@@ -173,7 +171,7 @@ void Plateau::charger_niveau()
                 j += 1;
                 cells.push_back({});
             }
-            
+
             myfile >> matrice;
             // ici on rempli la matrice de bonbons, glacage, murs et cerises
             if (cells.size() < 10 && i < 9)
@@ -218,18 +216,21 @@ void Plateau::charger_niveau()
             //ici on récupère les objectifs de niveau une fois que la matrice 9x9 est remplie
             else
             {
-                if (matrice == "r"){
+                if (matrice == "r")
+                {
                     myfile >> matrice;
                     coup_restant = stoi(matrice);
                     limite_coup = true;
                 }
-                else if(matrice == "b"){
+                else if (matrice == "b")
+                {
                     myfile >> matrice;
                     bonbon_pour_objectif = stoi(matrice);
                     myfile >> matrice;
                     bonbon_restant = stoi(matrice);
                 }
-                else if(matrice == "s"){
+                else if (matrice == "s")
+                {
                     myfile >> matrice;
                     objectif_score = stoi(matrice);
                 }
@@ -257,7 +258,7 @@ void Plateau::inisialisation(bool choix_niveau)
         initialisation_score();
     }
     initialize_neighbours();
-    
+
     charger_sprite();
     if (choix_niveau)
     {
@@ -277,7 +278,6 @@ void Plateau::inisialisation(bool choix_niveau)
     background = new Fl_PNG_Image("elements_graphique/fond_ecran.png");
 
     niveau_choix = choix_niveau;
-    
 }
 
 void Plateau::initialisation_score()
@@ -308,31 +308,38 @@ void Plateau::gestion_de_score()
     meilleur_score_text->draw();
 }
 
-void Plateau::tester_partie_gagne(){
+void Plateau::tester_partie_gagne()
+{
 
-    
-    if(limite_coup){
-        if(!(score >= objectif_score)){
+    if (limite_coup)
+    {
+        if (!(score >= objectif_score))
+        {
             partie_gagne = false;
         }
-        else{
+        else
+        {
             partie_gagne = true;
         }
-        if(coup_restant >= 0 && cerise_restante == 0 && glacage_restant == 0){
+        if (coup_restant >= 0 && cerise_restante == 0 && glacage_restant == 0)
+        {
             partie_gagne = true;
         }
-        else{
+        else
+        {
             partie_gagne = false;
         }
-        
     }
-    if(coup_restant == 0){
+    if (coup_restant == 0)
+    {
         cout << "fin de partie" << endl;
-        if(! partie_gagne){
-            cout << "vous avez perdu !" << endl; 
+        if (!partie_gagne)
+        {
+            cout << "vous avez perdu !" << endl;
         }
     }
-    if (partie_gagne){
+    if (partie_gagne)
+    {
         cout << "partie gagnée !!" << endl;
     }
 }
@@ -645,91 +652,174 @@ bool Plateau::test_glacage_a_effacer(Cell *cell1, Cell *voisin)
 
 void Plateau::crush_plateau()
 {
-    bool done = true;
+    vector<vector<Point>> vecteur_points{{Point{-1, 0}, Point{1, 0}}, {Point{0, 1}, Point{0, -1}}};
+    // Cell *cell1 = cell_p;
+    plateau_stable2 = true;
+    vector<Cell *> cells_a_effacer;
 
-    // pour crush les lignes
-    for (int r = 0; r < cells.size(); r++)
+    for (auto &cell : cells)
     {
-        for (int c = 0; c < (cells[r].size()) - 2; c++)
-        {
-            int num1 = abs(cells[r][c].bonbon->id);
-            int num2 = abs(cells[r][c + 1].bonbon->id);
-            int num3 = abs(cells[r][c + 2].bonbon->id);
-            //ici dans le test, l'id 102 représente celui de la cerise
-            if (num1 == num2 && num2 == num3 && num1 != 0 && num1 != 102)
+        for (auto &cell1 : cell)
+        {   
+            if(!cell1.bonbon->is_cerises && !cell1.bonbon->is_glacage && !cell1.bonbon->special){
+                int iteration_cote = 0; // Permet de savoir si on est horizontal ou vertical
+            for (auto &p : vecteur_points)
             {
-                vector<Cell> cells_a_teste;
-
-                cells[r][c].bonbon->id = -num1;
-                cells_a_teste.push_back(cells[r][c]);
-                cells[r][c + 1].bonbon->id = -num2;
-                cells_a_teste.push_back(cells[r][c + 1]);
-                cells[r][c + 2].bonbon->id = -num3;
-                cells_a_teste.push_back(cells[r][c + 2]);
-
-                done = false;
-                plateau_stable2 = false;
-                chute_bonbons = true;
-                coup_valide = true;
-                for (auto &c : cells_a_teste)
+                vector<Cell *> cell_provisoir;
+                for (auto &d : p)
                 {
-                    for (auto &n : c.neighbors)
+
+                    iteration_cote++;
+                    Cell *cell_actuelle = &cell1;
+                    bool finished = false;
+                    while (!finished)
                     {
-                        if (n->bonbon->is_glacage && test_glacage_a_effacer(&c, n))
+                        bool trouve = false;
+                        for (auto &voisin : cell_actuelle->neighbors)
                         {
-                            n->bonbon->id = -1;
-                            n->bonbon->is_glacage = false;
-                            n->bonbon->special = false;
+                            if ((cell_actuelle->center.x) + (100 * d.x) == voisin->center.x && (cell_actuelle->center.y) + (100 * d.y) == voisin->center.y)
+                            {
+                                if (cell_actuelle->bonbon->nom_sprite == voisin->bonbon->nom_sprite) // si même bonbon
+                                {
+                                    if (cell_provisoir.size() == 0) // si le bonbon cliqué n'est pas encore dans le vecteur
+                                    {
+                                        cell_provisoir.push_back(cell_actuelle);
+                                    }
+                                    cell_provisoir.push_back(voisin);
+                                    cell_actuelle = voisin;
+                                    trouve = true;
+                                    
+                                }
+                            }
+                        }
+                        if (trouve == false) // si on a pas trouvé de bonbon
+                            finished = true;
+                    }
+                }
+
+                if (cell_provisoir.size() >= 3) // si au minimum 3 bonbons identiques
+                {
+                    for (auto &c : cell_provisoir)
+                    {
+                        if (!(find(cells_a_effacer.begin(), cells_a_effacer.end(), c) != cells_a_effacer.end())) // ne pas mettre le bonbon cliqué deux fois
+                        {
+                            cells_a_effacer.push_back(c);
+                            plateau_stable2 = false;
+                            chute_bonbons = true;
+                            coup_valide = true;
                         }
                     }
                 }
+                cell_provisoir.clear(); // clear le vecteur à la prochaine itération
             }
+            }
+            
         }
     }
 
-    //pour crush les colonnes
-    for (int c = 0; c < cells[0].size(); c++)
+    for (auto &c : cells_a_effacer)
     {
-        for (int r = 0; r < (cells.size()) - 2; r++)
-        {
-            int num1 = abs(cells[r][c].bonbon->id);
-            int num2 = abs(cells[r + 1][c].bonbon->id);
-            int num3 = abs(cells[r + 2][c].bonbon->id);
-            if (num1 == num2 && num2 == num3 && num1 != 0 && num1 != 102)
-            {
-                vector<Cell> cells_a_teste;
-
-                cells[r][c].bonbon->id = -num1;
-                cells_a_teste.push_back(cells[r][c]);
-                cells[r + 1][c].bonbon->id = -num2;
-                cells_a_teste.push_back(cells[r + 1][c]);
-                cells[r + 2][c].bonbon->id = -num3;
-                cells_a_teste.push_back(cells[r + 2][c]);
-                done = false;
-                plateau_stable2 = false;
-                chute_bonbons = true;
-                coup_valide = true;
-
-                for (auto &c : cells_a_teste)
-                {
-                    for (auto &n : c.neighbors)
-                    {
-                        if (n->bonbon->is_glacage && test_glacage_a_effacer(&c, n))
-                        {
-                            n->bonbon->id = -1;
-                            n->bonbon->is_glacage = false;
-                            n->bonbon->special = false;
-                        }
-                    }
-                }
+        c->bonbon->id = -c->bonbon->id;
+        for (auto &n: c->neighbors){
+            if(n->bonbon->is_glacage){
+                n->bonbon->id = -1;
+                n->bonbon->is_glacage = false;
+                n->bonbon->special = false;
+                glacage_restant -= 1;
             }
         }
-    }
-    if (done)
-    {
-        plateau_stable2 = true;
     }
 }
+
+// void Plateau::crush_plateau()
+// {
+//     bool done = true;
+
+//     //inspiré d'un exercice sur leetcode après avoir fait une première version personnelle et fonctionnelle mais qui n'était pas opti.
+
+//     // pour crush les lignes
+//     for (int r = 0; r < cells.size(); r++)
+//     {
+//         for (int c = 0; c < (cells[r].size()) - 2; c++)
+//         {
+//             int num1 = abs(cells[r][c].bonbon->id);
+//             int num2 = abs(cells[r][c + 1].bonbon->id);
+//             int num3 = abs(cells[r][c + 2].bonbon->id);
+//             //ici dans le test, l'id 102 représente celui de la cerise
+//             if (num1 == num2 && num2 == num3 && num1 != 0 && num1 != 102)
+//             {
+//                 vector<Cell> cells_a_teste;
+
+//                 cells[r][c].bonbon->id = -num1;
+//                 cells_a_teste.push_back(cells[r][c]);
+//                 cells[r][c + 1].bonbon->id = -num2;
+//                 cells_a_teste.push_back(cells[r][c + 1]);
+//                 cells[r][c + 2].bonbon->id = -num3;
+//                 cells_a_teste.push_back(cells[r][c + 2]);
+
+//                 done = false;
+//                 plateau_stable2 = false;
+//                 chute_bonbons = true;
+//                 coup_valide = true;
+//                 for (auto &c : cells_a_teste)
+//                 {
+//                     for (auto &n : c.neighbors)
+//                     {
+//                         if (n->bonbon->is_glacage && test_glacage_a_effacer(&c, n))
+//                         {
+//                             n->bonbon->id = -1;
+//                             n->bonbon->is_glacage = false;
+//                             n->bonbon->special = false;
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     //pour crush les colonnes
+//     for (int c = 0; c < cells[0].size(); c++)
+//     {
+//         for (int r = 0; r < (cells.size()) - 2; r++)
+//         {
+//             int num1 = abs(cells[r][c].bonbon->id);
+//             int num2 = abs(cells[r + 1][c].bonbon->id);
+//             int num3 = abs(cells[r + 2][c].bonbon->id);
+//             if (num1 == num2 && num2 == num3 && num1 != 0 && num1 != 102)
+//             {
+//                 vector<Cell> cells_a_teste;
+
+//                 cells[r][c].bonbon->id = -num1;
+//                 cells_a_teste.push_back(cells[r][c]);
+//                 cells[r + 1][c].bonbon->id = -num2;
+//                 cells_a_teste.push_back(cells[r + 1][c]);
+//                 cells[r + 2][c].bonbon->id = -num3;
+//                 cells_a_teste.push_back(cells[r + 2][c]);
+//                 done = false;
+//                 plateau_stable2 = false;
+//                 chute_bonbons = true;
+//                 coup_valide = true;
+
+//                 for (auto &c : cells_a_teste)
+//                 {
+//                     for (auto &n : c.neighbors)
+//                     {
+//                         if (n->bonbon->is_glacage && test_glacage_a_effacer(&c, n))
+//                         {
+//                             n->bonbon->id = -1;
+//                             n->bonbon->is_glacage = false;
+//                             n->bonbon->special = false;
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     if (done)
+//     {
+//         plateau_stable2 = true;
+//     }
+// }
 
 void Plateau::afficher_plateau_terminal()
 {
@@ -783,6 +873,7 @@ void Plateau::initialize_neighbours()
     {
         for (int y = 0; y < 9; y++)
         {
+            // code repris dans le tp du démineur
             vector<Cell *> neighbors;
             for (auto &shift : vector<Point>({
                      {-1, 0}, // gauche // The 8 neighbors relative to the cell
@@ -816,7 +907,7 @@ void Plateau::rendre_plateau_stable()
     while (!plateau_stable2)
     {
         is_anime = true;
-        crush_plateau(); // il met plateau stable 2 a false
+        crush_plateau();
         test_ingredient_derniere_ligne();
         transformer_en_bombe();
         while (chute_bonbons)
