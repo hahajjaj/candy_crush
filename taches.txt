@@ -5,3 +5,9 @@
 
 ajouter glacage double couche
 ajouter un ecran de game over et de partie gagné (si partie gagné, passage automatique au niveau suivant)
+ajouter bouton de remise à zero du meilleur score
+changer animation de proposition coup en animation pulsé
+rajouter un score exponentiel au nombre de bonbons effacé
+rajouter +40 pour un glacage
+rajouter score et meilleur score dans les niveaux avec objectifs
+ajouter texte pour dire qu'aucun mouvement n'est possible
