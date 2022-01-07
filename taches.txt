@@ -6,7 +6,4 @@
 ajouter un ecran de game over et de partie gagné (si partie gagné, passage automatique au niveau suivant)
 ajout ecriture meilleur score dans fichier de niveau
 ajouter bouton de remise à zero du meilleur score
-changer animation de proposition coup en animation pulsé
-rajouter un score exponentiel au nombre de bonbons effacé
 ajouter texte pour dire qu'aucun mouvement n'est possible
-ajouter timer pour proposition de coup

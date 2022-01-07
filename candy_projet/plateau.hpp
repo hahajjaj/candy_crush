@@ -113,8 +113,8 @@ public:
     void transformer_en_bombe();
     void tester_partie_gagne();
     void generer_bonbons();
-    bool test_glacage_a_effacer(Cell *cell1, Cell *voisin);
-    string detecter_form();
+    bool test_pour_proposition_coup(Cell *cell1, Cell *voisin);
+    bool voisin_valide(Cell *cell1, Cell *voisin);
     void afficher_plateau_terminal();
     void initialisation_score();
     void test_ingredient_derniere_ligne();
@@ -410,40 +410,76 @@ void Plateau::initialize_grid()
 
 void Plateau::proposition_de_coup()
 {
-    // Fl::wait(6.000);
+    for(int i = 0; i < 100; i++){
+        Fl::wait(500);
+    }
+    is_anime = true;
+    int valeur_factice = 0;
     bool test = false;
+    vector<vector<Cell>> vect_temp = cells;
     for (auto &v : cells)
     {
         for (auto &c : v)
         {
             for (auto &voisin : c.neighbors)
             {
-                c.Inversion(voisin);
-                if (!c.tester_coup(voisin))
-                {
-                    c.Inversion(voisin);
-                    // c.Inversion(voisin);
-                    // c.Inversion(voisin);
-                    cout << "coup valide" << endl;
+                if(!c.bonbon->special && !voisin->bonbon->special && voisin_valide(&c, voisin) && test_pour_proposition_coup(&c, voisin)){
+                    for(int i = 0 ; i < 20; i++){
+                        c.center.y -= 1;
+                        Fl::wait(0.01);
+                    }
+                    for(int i = 0 ; i < 20; i++){
+                        c.center.y += 1;
+                        Fl::wait(0.01);
+                    }
                     test = true;
                     break;
                 }
             }
+            if(test){
+                break;
+            }
+        }
+        if(test){
+            break;
         }
     }
-    // if (!test)
-    // {
-    //     for (auto &v : cells)
-    //     {
-    //         for (auto &c : v)
-    //         {
-    //             Fl_PNG_Image *sprite_explosion = new Fl_PNG_Image(nullptr);
-    //             Bonbon *newBonbon = new Bonbon{*sprite_explosion, "vide", 0};
-    //             c.setBonbon(newBonbon);
-    //         }
-    //     }
-    //     rendre_plateau_stable();
-    // }
+    
+    if (!test)
+    {
+        for (auto &v : cells)
+        {
+            for (auto &c : v)
+            {
+                Fl_PNG_Image *sprite_explosion = new Fl_PNG_Image(nullptr);
+                Bonbon *newBonbon = new Bonbon{*sprite_explosion, "vide", 0};
+                c.setBonbon(newBonbon);
+            }
+        }
+        rendre_plateau_stable();
+    }
+    is_anime = false;
+}
+
+bool Plateau::test_pour_proposition_coup(Cell *cell1, Cell *voisin){
+    Bonbon *bonbon1 = cell1->bonbon;
+    Bonbon *bonbon2 = voisin->bonbon;
+
+    bool test_coup_valide = false;
+
+    cell1->setBonbon(bonbon2);
+    voisin->setBonbon(bonbon1);
+
+    if (voisin->tester_coup(voisin)){
+        test_coup_valide = true;
+        cout << "true" << endl;
+    }
+
+    cell1->setBonbon(bonbon1);
+    voisin->setBonbon(bonbon2);
+
+    return test_coup_valide;
+
 }
 
 void Plateau::test_ingredient_derniere_ligne()
@@ -647,7 +683,7 @@ void Plateau::translation_plateau_vers_bas()
     }
 }
 
-bool Plateau::test_glacage_a_effacer(Cell *cell1, Cell *voisin)
+bool Plateau::voisin_valide(Cell *cell1, Cell *voisin)
 {
     vector<Point> vecteur_points{Point{-1, 0}, Point{1, 0}, Point{0, 1}, Point{0, -1}};
     for (auto &d : vecteur_points)
@@ -732,7 +768,7 @@ void Plateau::crush_plateau()
         c->bonbon->id = -c->bonbon->id;
         for (auto &n : c->neighbors)
         {
-            if (n->bonbon->is_glacage && test_glacage_a_effacer(c, n))
+            if (n->bonbon->is_glacage && voisin_valide(c, n))
             {
                 n->bonbon->id = -1;
                 n->bonbon->is_glacage = false;
@@ -747,7 +783,7 @@ void Plateau::crush_plateau()
 
         for (auto &n : c->neighbors)
         {
-            if (n->bonbon->is_double_glacage && test_glacage_a_effacer(c, n))
+            if (n->bonbon->is_double_glacage && voisin_valide(c, n))
             {
                 const char *nom_fichier = "sprite/glacage.png";
                 Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
@@ -796,7 +832,7 @@ void Plateau::crush_plateau()
 //                 {
 //                     for (auto &n : c.neighbors)
 //                     {
-//                         if (n->bonbon->is_glacage && test_glacage_a_effacer(&c, n))
+//                         if (n->bonbon->is_glacage && voisin_valide(&c, n))
 //                         {
 //                             n->bonbon->id = -1;
 //                             n->bonbon->is_glacage = false;
@@ -835,7 +871,7 @@ void Plateau::crush_plateau()
 //                 {
 //                     for (auto &n : c.neighbors)
 //                     {
-//                         if (n->bonbon->is_glacage && test_glacage_a_effacer(&c, n))
+//                         if (n->bonbon->is_glacage && voisin_valide(&c, n))
 //                         {
 //                             n->bonbon->id = -1;
 //                             n->bonbon->is_glacage = false;
@@ -868,13 +904,17 @@ void Plateau::afficher_plateau_terminal()
 void Plateau::transformer_en_bombe()
 {
     bool explosion = false;
+    int nombre_bonbon_crushe = 0;
     for (int y = 0; y < cells.size(); y++)
     {
         for (int x = 0; x < cells[0].size(); x++)
         {
             if (cells[y][x].bonbon->id < 0)
             {
-                score += 20;
+                if(!cells[y][x].bonbon->special){
+                score += (20 + nombre_bonbon_crushe*0.5);
+
+                }
                 if (cells[y][x].bonbon->is_glacage)
                 {
                     score += 40;
@@ -958,6 +998,7 @@ void Plateau::rendre_plateau_stable()
     }
     is_anime = false;
     proposition_de_coup();
+    
 }
 
 void Plateau::draw()
