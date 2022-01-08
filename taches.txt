@@ -1,9 +1,8 @@
 - fl drag
-- impossible                                        FAIT
 - Bonbons spéciaux
 - editeur de tableau
 
-ajouter un ecran de game over et de partie gagné (si partie gagné, passage automatique au niveau suivant)
-ajout ecriture meilleur score dans fichier de niveau
 ajouter bouton de remise à zero du meilleur score
-ajouter texte pour dire qu'aucun mouvement n'est possible
+deplacer methode de logique de jeu dans classe jeu
+Faire de l'héritage des éléments de Cell pour pouvoir stocker des bonbons, des murs, des glacages, des doubles glacage, etc etc
+faire l'editeur de niveau

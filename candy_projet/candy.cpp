@@ -117,6 +117,7 @@ public:
                     crushed = false;
                     plateau.draw();
                     plateau.rendre_plateau_stable();
+                    plateau.proposition_de_coup();
                 }
                 else
                 {

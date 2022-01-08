@@ -12,13 +12,14 @@
 
 using namespace std;
 
-struct buttonnn
+struct button_niveau
 {
-    
+
     Point center;
     Fl_PNG_Image *image_accueil;
     int ecran;
     string file_name;
+    Text *numero_du_niveau;
 
     bool contains(Point p)
     {
@@ -28,7 +29,7 @@ struct buttonnn
 
 class selecteur_niveau
 {
-    vector<buttonnn> buttons;
+    vector<button_niveau> buttons;
     Fl_PNG_Image *background_menu;
 
 public:
@@ -51,31 +52,41 @@ selecteur_niveau::selecteur_niveau()
 
 void selecteur_niveau::init_background()
 {
-    background_menu = new Fl_PNG_Image("elements_graphique/fond_ecran3.png");
+    background_menu = new Fl_PNG_Image("elements_graphique/fond_ecran_menu.png");
 }
 
 void selecteur_niveau::init_button()
 {
+    ifstream myfile;
+    myfile.open("levels/liste_of_levels.txt");
+    string nom_niveau;
+    int i = 0;
+    int j = 0;
+    if (myfile.is_open())
+    {
+        int numero_niveau = 0;
+        while (myfile.good())
 
-    //boutton lancement partie
-    Fl_PNG_Image *niveau1 = new Fl_PNG_Image("sprite/1.png");
-    buttonnn nouvelle_partie{{250, 420}, niveau1, 4, "niveau1.txt"};
-    buttons.push_back(nouvelle_partie);
-
-    //boutton charger un niveau
-    Fl_PNG_Image *niveau2 = new Fl_PNG_Image("sprite/2.png");
-    buttonnn selection_niveau{{250, 589}, niveau2, 4, "niveau2.txt"};
-    buttons.push_back(selection_niveau);
-
-    //boutton editeur de niveau
-    Fl_PNG_Image *niveau3 = new Fl_PNG_Image("sprite/4.png");
-    buttonnn editeur_niveau_niveau{{250, 727}, niveau3, 4, "niveau3.txt"};
-    buttons.push_back(editeur_niveau_niveau);
+        {
+            numero_niveau += 1;
+            if (i == 4)
+            {
+                i = 0;
+                j += 1;
+            }
+            Text *nombre_du_niveau = new Text(to_string(numero_niveau), {325 + (i * 160), 490 + (j * 160)}, 70);
+            myfile >> nom_niveau;
+            cout << nom_niveau << endl;
+            Fl_PNG_Image *niveau = new Fl_PNG_Image("elements_graphique/case_niveau.png");
+            button_niveau case_niveau{{250 + (i * 160), 420 + (j * 160)}, niveau, 4, nom_niveau, nombre_du_niveau};
+            buttons.push_back(case_niveau);
+            i++;
+        }
+    }
 
     Fl_PNG_Image *quitter = new Fl_PNG_Image("elements_graphique/exit.png");
-    buttonnn boutton_quitter{{820, 917}, quitter, 1, "rien"};
+    button_niveau boutton_quitter{{820, 917}, quitter, 1, "rien"};
     buttons.push_back(boutton_quitter);
-
 }
 
 void selecteur_niveau::draw()
@@ -84,6 +95,10 @@ void selecteur_niveau::draw()
     for (auto &b : buttons)
     {
         b.image_accueil->draw(b.center.x, b.center.y);
+        if (b.file_name != "rien")
+        {
+            b.numero_du_niveau->draw();
+        }
     }
 }
 
@@ -99,7 +114,8 @@ void selecteur_niveau::mouseClick(Point mouseLoc)
         cout << ok << endl;
         if (ok)
         {
-            if(buttons[i].file_name != "rien"){
+            if (buttons[i].file_name != "rien")
+            {
                 *file_name = buttons[i].file_name;
             }
             *selection_ecran = buttons[i].ecran; // boutton clické

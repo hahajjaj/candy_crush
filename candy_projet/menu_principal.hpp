@@ -47,7 +47,7 @@ menu_principal::menu_principal(){
 }
 
 void menu_principal::init_background(){
-    background_menu = new Fl_PNG_Image("elements_graphique/fond_ecran3.png");
+    background_menu = new Fl_PNG_Image("elements_graphique/fond_ecran_menu.png");
 }
 
 void menu_principal::init_button(){
