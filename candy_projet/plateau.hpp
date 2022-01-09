@@ -95,13 +95,18 @@ class Plateau
     int score = 0;
     int meilleur_score = 0;
 
-public:
-    //pointeurs qui permettent de gérer l'affichage des fenêtres, quitter le niveau ou du choix de niveau
     bool *bool_quitter_partie;
     int *selection_ecran;
     string *file_name;
 
+public:
+  
     Plateau(){};
+
+    void set_selection_ecran(int *new_ecran);
+    void set_quitter_partie(bool *changement);
+    void set_filename(string *new_name);
+
     void draw();
     void charger_sprite();
     void inisialisation(bool choix_niveau);
@@ -140,6 +145,18 @@ public:
 //     initialisation_score();
 // }
 
+void Plateau::set_selection_ecran(int *new_ecran){
+    selection_ecran = new_ecran;
+}
+
+void Plateau::set_quitter_partie(bool *changement){
+    bool_quitter_partie = changement;
+}
+
+void Plateau::set_filename(string *new_name){
+    file_name = new_name;
+}
+
 void Plateau::charger_sprite()
 {
     check = new Fl_PNG_Image("elements_graphique/check.png");
@@ -157,7 +174,9 @@ void Plateau::charger_sprite()
     affichage_coup_restant = new Text(to_string(coup_restant), {1080, 690}, 40);
 
     Fl_PNG_Image *sprite = new Fl_PNG_Image("elements_graphique/exit.png");
-    quitter = new Bonbon{*sprite, "exit", 0};
+    quitter = new Bonbon{"exit", 0};
+    quitter->set_sprite(sprite);
+
 
     fond_case = new Fl_PNG_Image("elements_graphique/case.png");
     background = new Fl_PNG_Image("elements_graphique/fond_ecran.png");
@@ -196,17 +215,21 @@ void Plateau::charger_niveau()
                 {
                     nom_fichier = "sprite/mur.png";
                     Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-                    Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, 100};
-                    newBonbon->special = true;
+                    Bonbon *newBonbon = new Bonbon{nom_fichier, 100};
+                    newBonbon->set_sprite(sprite);
+
+                    newBonbon->set_special(true);
                     cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
                 }
                 else if (matrice == "*")
                 {
                     nom_fichier = "sprite/glacage.png";
                     Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-                    Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, 101};
-                    newBonbon->special = true;
-                    newBonbon->is_glacage = true;
+                    Bonbon *newBonbon = new Bonbon{nom_fichier, 101};
+                    newBonbon->set_sprite(sprite);
+
+                    newBonbon->set_special(true);
+                    newBonbon->set_glacage(true);
                     cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
                     glacage_restant += 1;
                 }
@@ -214,8 +237,9 @@ void Plateau::charger_niveau()
                 {
                     nom_fichier = "sprite/cerises.png";
                     Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-                    Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, 102};
-                    newBonbon->is_cerises = true;
+                    Bonbon *newBonbon = new Bonbon{nom_fichier, 102};
+                    newBonbon->set_sprite(sprite);
+                    newBonbon->set_cerise(true);
                     cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
                     cerise_restante += 1;
                     cerise = true;
@@ -224,9 +248,10 @@ void Plateau::charger_niveau()
                 {
                     nom_fichier = "sprite/glacage_double.png";
                     Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-                    Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, 103};
-                    newBonbon->is_double_glacage = true;
-                    newBonbon->special = true;
+                    Bonbon *newBonbon = new Bonbon{nom_fichier, 103};
+                    newBonbon->set_sprite(sprite);
+                    newBonbon->set_double_glacage(true);
+                    newBonbon->set_special(true);
                     cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
                     glacage_restant += 2;
                     glacage = true;
@@ -235,7 +260,8 @@ void Plateau::charger_niveau()
                 {
                     nom_fichier = bonbons[stoi(matrice)].c_str();
                     Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-                    Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, stoi(matrice) + 1};
+                    Bonbon *newBonbon = new Bonbon{nom_fichier, stoi(matrice) + 1};
+                    newBonbon->set_sprite(sprite);
                     cells[j].push_back(Cell{Point{100 * (i), 100 * (j)}, 100, 100, newBonbon});
                 }
 
@@ -355,7 +381,8 @@ void Plateau::gestion_de_score()
 
 void Plateau::tester_partie_gagne()
 {
-    if (coup_restant >= 0 && cerise_restante == 0 && glacage_restant == 0 && bonbon_restant == 0)
+    if(niveau_choix){
+        if (coup_restant >= 0 && cerise_restante == 0 && glacage_restant == 0 && bonbon_restant == 0)
     {
         
         partie_gagne = true;
@@ -377,6 +404,8 @@ void Plateau::tester_partie_gagne()
     {
         proposition_de_coup();
     }
+    }
+    
 }
 
 void Plateau::affichage_objectifs()
@@ -434,12 +463,14 @@ void Plateau::initialize_grid()
             int nbr_aleatoire = (rand() % bonbons.size());
             const char *nom_fichier = bonbons[nbr_aleatoire].c_str();
             Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-            Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, nbr_aleatoire + 1};
+            Bonbon *newBonbon = new Bonbon{nom_fichier, nbr_aleatoire + 1};
+            newBonbon->set_sprite(sprite);
             cells[x].push_back(Cell{Point{100 * (y), 100 * (x)}, 100, 100, newBonbon});
         }
     }
     Fl_PNG_Image *sprite = new Fl_PNG_Image("elements_graphique/exit.png");
-    quitter = new Bonbon{*sprite, "exit", 0};
+    quitter = new Bonbon{"exit", 0};
+    quitter->set_sprite(sprite);
 }
 
 void Plateau::proposition_de_coup()
@@ -458,7 +489,7 @@ void Plateau::proposition_de_coup()
         {
             for (auto &voisin : c.neighbors)
             {
-                if (!c.bonbon->special && !voisin->bonbon->special && voisin_valide(&c, voisin) && test_pour_proposition_coup(&c, voisin))
+                if (!c.bonbon->get_special() && !voisin->bonbon->get_special() && voisin_valide(&c, voisin) && test_pour_proposition_coup(&c, voisin))
                 {
                     for (int i = 0; i < 20; i++)
                     {
@@ -492,7 +523,9 @@ void Plateau::proposition_de_coup()
             for (auto &c : v)
             {
                 Fl_PNG_Image *sprite_explosion = new Fl_PNG_Image(nullptr);
-                Bonbon *newBonbon = new Bonbon{*sprite_explosion, "vide", 0};
+                Bonbon *newBonbon = new Bonbon{"vide", 0};
+                newBonbon->set_sprite(sprite_explosion);
+
                 c.setBonbon(newBonbon);
             }
         }
@@ -527,10 +560,10 @@ void Plateau::test_ingredient_derniere_ligne()
 {
     for (int x = 0; x < cells.size(); x++)
     {
-        if (cells[cells.size() - 1][x].bonbon->is_cerises)
+        if (cells[cells.size() - 1][x].bonbon->get_cerise())
         {
             chute_bonbons = true;
-            cells[cells.size() - 1][x].bonbon->id = -1;
+            cells[cells.size() - 1][x].bonbon->set_id(-1);
             cerise_restante -= 1;
         }
     }
@@ -544,13 +577,13 @@ void Plateau::selection_bonbon_tombe()
     {
         for (int x = 0; x < cells[0].size(); x++)
         {
-            if (cells[y][x].bonbon->id == 0)
+            if (cells[y][x].bonbon->get_id() == 0)
             {
                 for (int q = y; q != -1; q--)
                 {
-                    if (cells[q][x].bonbon->id != 0)
+                    if (cells[q][x].bonbon->get_id() != 0)
                     {
-                        if (cells[q][x].bonbon->special)
+                        if (cells[q][x].bonbon->get_special())
                         {
                             break;
                         }
@@ -570,13 +603,15 @@ void Plateau::generer_bonbons()
 {
     for (int x = 0; x < cells[0].size(); x++)
     {
-        if (cells[0][x].bonbon->id == 0)
+        if (cells[0][x].bonbon->get_id() == 0)
         {
 
             int nbr_aleatoire = (rand() % bonbons.size());
             const char *nom_fichier = bonbons[nbr_aleatoire].c_str();
             Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-            Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, nbr_aleatoire + 1};
+            Bonbon *newBonbon = new Bonbon{nom_fichier, nbr_aleatoire + 1};
+            newBonbon->set_sprite(sprite);
+
             cells[0][x].setBonbon(newBonbon);
             chute_bonbons = true;
         }
@@ -593,15 +628,15 @@ void Plateau::translation_diagonal()
             for (int x = 0; x < cells[0].size(); x++)
             {
                 // Si la cell actuelle n'est pas vide et qu'elle n'est pas un element special
-                if (cells[y][x].bonbon->id != 0 && !cells[y][x].bonbon->special)
+                if (cells[y][x].bonbon->get_id() != 0 && !cells[y][x].bonbon->get_special())
                 {
                     // si on est pas sur la dernière colonne et que la diagonal droite est vide
-                    if (x != cells.size() - 1 && cells[y + 1][x + 1].bonbon->id == 0)
+                    if (x != cells.size() - 1 && cells[y + 1][x + 1].bonbon->get_id() == 0)
                     {
-                        if (cells[y][x + 1].bonbon->special)
+                        if (cells[y][x + 1].bonbon->get_special())
                         {
                             cells[y + 1][x + 1].is_selectionne = true;
-                            cells[y][x].bonbon->diagonal = true;
+                            cells[y][x].bonbon->set_diagonal(true);
                             cells[y][x].center.y += 1;
                             cells[y][x].center.x += 1;
 
@@ -610,12 +645,12 @@ void Plateau::translation_diagonal()
                     }
 
                     // Si on est pas sur la première colonne
-                    else if (x != 0 && cells[y + 1][x - 1].bonbon->id == 0)
+                    else if (x != 0 && cells[y + 1][x - 1].bonbon->get_id() == 0)
                     {
-                        if (cells[y][x - 1].bonbon->special && !cells[y + 1][x - 1].is_selectionne)
+                        if (cells[y][x - 1].bonbon->get_special() && !cells[y + 1][x - 1].is_selectionne)
                         {
-                            cells[y][x].bonbon->diagonal = true;
-                            cells[y][x].bonbon->gauche = true;
+                            cells[y][x].bonbon->set_diagonal(true);
+                            cells[y][x].bonbon->set_gauche(true);
                             cells[y][x].center.y += 1;
                             cells[y][x].center.x -= 1;
                             Fl::wait(0.00016);
@@ -632,28 +667,30 @@ void Plateau::translation_diagonal()
         for (int x = 0; x < cells[0].size(); x++)
         {
             cells[y][x].is_selectionne = false;
-            if (cells[y][x].bonbon->diagonal)
+            if (cells[y][x].bonbon->get_diagonal())
             {
-                if (cells[y][x].bonbon->gauche)
+                if (cells[y][x].bonbon->get_gauche())
                 {
-                    cells[y][x].bonbon->gauche = false;
-                    cells[y][x].bonbon->diagonal = false;
+                    cells[y][x].bonbon->set_gauche(false);
+                    cells[y][x].bonbon->set_diagonal(false);
                     cells[y + 1][x - 1].setBonbon(cells[y][x].bonbon);
                     cells[y][x].center.y -= 100;
                     cells[y][x].center.x += 100;
                     Fl_PNG_Image *sprite = new Fl_PNG_Image(nullptr);
-                    Bonbon *newBonbon = new Bonbon{*sprite, "vide", 0};
+                    Bonbon *newBonbon = new Bonbon{"vide", 0};
+                    newBonbon->set_sprite(sprite);
                     cells[y][x].setBonbon(newBonbon);
                     chute_bonbons = true;
                 }
                 else
                 {
-                    cells[y][x].bonbon->diagonal = false;
+                    cells[y][x].bonbon->set_diagonal(false);
                     cells[y + 1][x + 1].setBonbon(cells[y][x].bonbon);
                     cells[y][x].center.y -= 100;
                     cells[y][x].center.x -= 100;
                     Fl_PNG_Image *sprite = new Fl_PNG_Image(nullptr);
-                    Bonbon *newBonbon = new Bonbon{*sprite, "vide", 0};
+                    Bonbon *newBonbon = new Bonbon{"vide", 0};
+                    newBonbon->set_sprite(sprite);
                     cells[y][x].setBonbon(newBonbon);
                     chute_bonbons = true;
                 }
@@ -683,14 +720,15 @@ void Plateau::translation_plateau_vers_bas()
     //cas de la derniere ligne
     for (int x = 0; x < cells[0].size(); x++)
     {
-        if (cells[cells.size() - 1][x].bonbon->id == 0 && cells[cells.size() - 2][x].bonbon->id != 0)
+        if (cells[cells.size() - 1][x].bonbon->get_id() == 0 && cells[cells.size() - 2][x].bonbon->get_id() != 0)
         {
             cells[cells.size() - 1][x].setBonbon(cells[cells.size() - 2][x].bonbon);
             cells[cells.size() - 2][x].center.y -= 100;
 
             // cells[y-2][x].bonbon->id = 0;
             Fl_PNG_Image *sprite = new Fl_PNG_Image(nullptr);
-            Bonbon *newBonbon = new Bonbon{*sprite, "vide", 0};
+            Bonbon *newBonbon = new Bonbon{"vide", 0};
+            newBonbon->set_sprite(sprite);
             cells[cells.size() - 2][x].setBonbon(newBonbon);
         }
     }
@@ -701,7 +739,7 @@ void Plateau::translation_plateau_vers_bas()
 
         for (int x = 0; x < cells[0].size(); x++)
         {
-            if (cells[y - 1][x].bonbon->id == 0 && !cells[y - 2][x].bonbon->special && cells[y - 2][x].bonbon->id != 0)
+            if (cells[y - 1][x].bonbon->get_id() == 0 && !cells[y - 2][x].bonbon->get_special() && cells[y - 2][x].bonbon->get_id() != 0)
             {
 
                 cells[y - 1][x].setBonbon(cells[y - 2][x].bonbon);
@@ -709,7 +747,8 @@ void Plateau::translation_plateau_vers_bas()
 
                 // cells[y-2][x].bonbon->id = 0;
                 Fl_PNG_Image *sprite = new Fl_PNG_Image(nullptr);
-                Bonbon *newBonbon = new Bonbon{*sprite, "vide", 0};
+                Bonbon *newBonbon = new Bonbon{"vide", 0};
+                    newBonbon->set_sprite(sprite);
                 cells[y - 2][x].setBonbon(newBonbon);
             }
         }
@@ -749,7 +788,7 @@ void Plateau::crush_plateau()
     {
         for (auto &cell1 : cell)
         {
-            if (!cell1.bonbon->is_cerises && !cell1.bonbon->is_glacage && !cell1.bonbon->special)
+            if (!cell1.bonbon->get_cerise() && !cell1.bonbon->get_glacage() && !cell1.bonbon->get_special())
             {
                 int iteration_cote = 0; // Permet de savoir si on est horizontal ou vertical
                 for (auto &p : vecteur_points)
@@ -768,7 +807,7 @@ void Plateau::crush_plateau()
                             {
                                 if ((cell_actuelle->center.x) + (100 * d.x) == voisin->center.x && (cell_actuelle->center.y) + (100 * d.y) == voisin->center.y)
                                 {
-                                    if (cell_actuelle->bonbon->nom_sprite == voisin->bonbon->nom_sprite) // si même bonbon
+                                    if (cell_actuelle->bonbon->get_nom_sprite() == voisin->bonbon->get_nom_sprite()) // si même bonbon
                                     {
                                         if (cell_provisoir.size() == 0) // si le bonbon cliqué n'est pas encore dans le vecteur
                                         {
@@ -806,18 +845,18 @@ void Plateau::crush_plateau()
 
     for (auto &c : cells_a_effacer)
     {
-        if (bonbon_objectif && bonbon_restant > 0 && c->bonbon->id == bonbon_pour_objectif + 1)
+        if (bonbon_objectif && bonbon_restant > 0 && c->bonbon->get_id() == bonbon_pour_objectif + 1)
         {
             bonbon_restant -= 1;
         }
-        c->bonbon->id = -c->bonbon->id;
+        c->bonbon->set_id(-c->bonbon->get_id());
         for (auto &n : c->neighbors)
         {
-            if (n->bonbon->is_glacage && voisin_valide(c, n))
+            if (n->bonbon->get_glacage() && voisin_valide(c, n))
             {
-                n->bonbon->id = -1;
-                n->bonbon->is_glacage = false;
-                n->bonbon->special = false;
+                n->bonbon->set_id(-1);
+                n->bonbon->set_glacage(false);
+                n->bonbon->set_special(false);
                 glacage_restant -= 1;
             }
         }
@@ -828,13 +867,14 @@ void Plateau::crush_plateau()
 
         for (auto &n : c->neighbors)
         {
-            if (n->bonbon->is_double_glacage && voisin_valide(c, n))
+            if (n->bonbon->get_double_glacage() && voisin_valide(c, n))
             {
                 const char *nom_fichier = "sprite/glacage.png";
                 Fl_PNG_Image *sprite = new Fl_PNG_Image(nom_fichier);
-                Bonbon *newBonbon = new Bonbon{*sprite, nom_fichier, 101};
-                newBonbon->special = true;
-                newBonbon->is_glacage = true;
+                Bonbon *newBonbon = new Bonbon{nom_fichier, 101};
+                    newBonbon->set_sprite(sprite);
+                newBonbon->set_special(true);
+                newBonbon->set_glacage(true);
                 n->setBonbon(newBonbon);
                 glacage_restant -= 1;
                 score += 40;
@@ -864,22 +904,23 @@ void Plateau::transformer_en_bombe()
     {
         for (int x = 0; x < cells[0].size(); x++)
         {
-            if (cells[y][x].bonbon->id < 0)
+            if (cells[y][x].bonbon->get_id() < 0)
             {
-                if (!cells[y][x].bonbon->special)
+                if (!cells[y][x].bonbon->get_special())
                 {
                     score += (20 + nombre_bonbon_crushe * 0.5);
                 }
-                if (cells[y][x].bonbon->is_glacage)
+                if (cells[y][x].bonbon->get_glacage())
                 {
                     score += 40;
                 }
-                else if (cells[y][x].bonbon->is_cerises)
+                else if (cells[y][x].bonbon->get_cerise())
                 {
                     score += 60;
                 }
                 Fl_PNG_Image *sprite_explosion = new Fl_PNG_Image("sprite/explosion.png");
-                Bonbon *newBonbon = new Bonbon{*sprite_explosion, "explosion", -6};
+                Bonbon *newBonbon = new Bonbon{"explosion", -6};
+                newBonbon->set_sprite(sprite_explosion);
                 cells[y][x].setBonbon(newBonbon);
 
                 explosion = true;
@@ -892,10 +933,12 @@ void Plateau::transformer_en_bombe()
     {
         for (int x = 0; x < cells[0].size(); x++)
         {
-            if (cells[y][x].bonbon->id < 0)
+            if (cells[y][x].bonbon->get_id() < 0)
             {
                 Fl_PNG_Image *sprite_explosion = new Fl_PNG_Image(nullptr);
-                Bonbon *newBonbon = new Bonbon{*sprite_explosion, "vide", 0};
+                Bonbon *newBonbon = new Bonbon{"vide", 0};
+                    newBonbon->set_sprite(sprite_explosion);
+
                 cells[y][x].setBonbon(newBonbon);
             }
         }
@@ -976,7 +1019,7 @@ void Plateau::draw()
         }
 
     //affichage du bouton pour quitter la partie
-    quitter->sprite.draw(820, 917);
+    quitter->get_sprite()->draw(820, 917);
 
     //affichage du score et du meilleur score
     gestion_de_score();
@@ -1019,7 +1062,7 @@ void Plateau::mouseClick(Point mouseLoc)
                 file_name->replace(6, 1, number_of_next_level);
             }
         }
-        if (mouseLoc.x >= 820 && mouseLoc.x < 820 + quitter->sprite.w() && mouseLoc.y >= 917 && mouseLoc.y < 917 + quitter->sprite.h())
+        if (mouseLoc.x >= 820 && mouseLoc.x < 820 + quitter->get_sprite()->w() && mouseLoc.y >= 917 && mouseLoc.y < 917 + quitter->get_sprite()->h())
         {
             *bool_quitter_partie = true;
             if (*selection_ecran == 4)
@@ -1038,7 +1081,7 @@ void Plateau::mouseClick(Point mouseLoc)
             {
                 for (auto &c : v)
                 {
-                    if (!c.bonbon->special)
+                    if (!c.bonbon->get_special())
                     {
 
                         c.mouseClick(mouseLoc, coup_restant);

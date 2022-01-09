@@ -2,6 +2,8 @@
 - Bonbons spéciaux
 - editeur de tableau
 
+getter/setter
+destructeur
 ajouter bouton de remise à zero du meilleur score
 deplacer methode de logique de jeu dans classe jeu
 Faire de l'héritage des éléments de Cell pour pouvoir stocker des bonbons, des murs, des glacages, des doubles glacage, etc etc

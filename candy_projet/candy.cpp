@@ -40,18 +40,19 @@ class MainWindow : public Fl_Window
     bool crushed = true;
     // bool partie_lance = false;
     bool bool_quitter_partie = false;
+    bool affichage_ecran_acceuil = true;
 
 public:
-    bool affichage_ecran_acceuil = true;
+    
     MainWindow() : Fl_Window(500, 500, windowWidth, windowHeight, "Candy Crush")
     {
         Fl::add_timeout(1.0 / refreshPerSecond, Timer_CB, this);
         resizable(this);
         menu.selection_ecran = &selection_ecran;
-        plateau.selection_ecran = &selection_ecran;
+        plateau.set_selection_ecran(&selection_ecran);
         selec_niveau.selection_ecran = &selection_ecran;
         selec_niveau.file_name = &file_name;
-        plateau.bool_quitter_partie = &bool_quitter_partie;
+        plateau.set_quitter_partie(&bool_quitter_partie);
     }
 
     void remettre_plateau_zero_noniveau()
@@ -64,8 +65,8 @@ public:
             // (&plateau)->~Plateau();
             // new (&plateau) Plateau();
             plateau = Plateau();
-            plateau.selection_ecran = &selection_ecran;
-            plateau.bool_quitter_partie = &bool_quitter_partie;
+            plateau.set_selection_ecran(&selection_ecran);
+            plateau.set_quitter_partie(&bool_quitter_partie);
             cout << "click" << endl;
         }
     }
@@ -112,7 +113,7 @@ public:
                 if (crushed)
                 {
                     // partie_lance = true;
-                    plateau.file_name = &file_name;
+                    plateau.set_filename(&file_name);
                     plateau.inisialisation(true); // choix de niveau
                     crushed = false;
                     plateau.draw();

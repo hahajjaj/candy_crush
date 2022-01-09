@@ -22,7 +22,6 @@ class Cell
 {
 public:
     Animation *anim;
-    bool on = false;
     bool tombe = false;
     bool is_selectionne = false;
     
@@ -69,7 +68,7 @@ void Cell::draw()
 {
     // fl_draw_box(FL_FLAT_BOX,center.x,center.y,w,h,fillColor);
     // fl_draw_box(FL_BORDER_FRAME,center.x,center.y,w,h,frameColor);
-    bonbon->sprite.draw(center.x, center.y, w, h);
+    bonbon->get_sprite()->draw(center.x, center.y, w, h);
     // jeu->tester_coup();
 }
 
@@ -301,7 +300,7 @@ bool Cell::tester_coup(Cell *cell_p)
                 {
                     if ((cell_actuelle->center.x) + (100 * d.x) == voisin->center.x && (cell_actuelle->center.y) + (100 * d.y) == voisin->center.y)
                     {
-                        if (cell_actuelle->bonbon->nom_sprite == voisin->bonbon->nom_sprite) // si même bonbon
+                        if (cell_actuelle->bonbon->get_nom_sprite() == voisin->bonbon->get_nom_sprite()) // si même bonbon
                         {
                             if (cell_provisoir.size() == 0) // si le bonbon cliqué n'est pas encore dans le vecteur
                             {
