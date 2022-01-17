@@ -1,3 +1,7 @@
+/*
+Nom et prénom : Ehlalouch Safouan 000514145, Hamza Hajjaj 000461105
+Classe qui représente le menu d'acceuil du jeu
+*/
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Shared_Image.H>

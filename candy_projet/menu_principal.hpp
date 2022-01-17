@@ -1,4 +1,7 @@
-//
+/*
+Nom et prénom : Ehlalouch Safouan 000514145, Hamza Hajjaj 000461105
+Classe qui représente le menu principal du jeu
+*/
 #include <iostream>
 
 #include <FL/Fl.H>
@@ -29,12 +32,13 @@ class menu_principal
 {
     vector <buttonn> buttons;
     Fl_PNG_Image *background_menu;
-    public:
     int *selection_ecran;
+    public:
     menu_principal();
     void draw();
     void init_background();
     void init_button();
+    void set_selection_ecran(int* new_selection);
     void mouseMove(Point mouseLoc);
     void mouseClick(Point mouseLoc);
     buttonn contains(Point p);
@@ -44,6 +48,10 @@ class menu_principal
 menu_principal::menu_principal(){
     init_background();
     init_button();
+}
+
+void menu_principal::set_selection_ecran(int* new_selection){
+    selection_ecran = new_selection;
 }
 
 void menu_principal::init_background(){

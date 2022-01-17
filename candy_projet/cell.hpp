@@ -1,3 +1,8 @@
+/*
+Nom et prénom : Ehlalouch Safouan 000514145, Hamza Hajjaj 000461105
+Classe Cell : représente une cellule dans le plateau de jeu
+*/
+
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Shared_Image.H>
@@ -20,38 +25,43 @@ class Animation;
 
 class Cell
 {
-public:
-    Animation *anim;
+    int w, h;
     bool tombe = false;
     bool is_selectionne = false;
-    
-
-    Fl_Color frameColor;
-    Fl_Color fillColor;
-    int w, h;
-
-    Point center;
-    vector<Cell *> neighbors;
+    Animation *anim;
     Bonbon *bonbon;
-    Cell(Point center, int w, int h, Bonbon *bonbon, Fl_Color frameColor = FL_BLACK, Fl_Color fillColor = FL_WHITE);
+    vector<Cell *> neighbors;
+    Point center;
+public:
+    
+    Cell(Point center, int w, int h, Bonbon *bonbon);
     void draw();
     bool tester_plateau();
     void finaliser_plateau();
     void setNeighbors(const vector<Cell *> newNeighbors);
+    vector<Cell *> getNeighbors();
     void mouseMove(Point mouseLoc);
     void mouseClick(Point mouseLoc, int &coup_restant);
     bool contains(Point p);
-    void setFrameColor(Fl_Color newFrameColor);
-    void setFillColor(Fl_Color newFillColor);
     void Inversion(Cell *cell);
     void setBonbon(Bonbon *newBonbon);
     bool tester_coup(Cell* cell_p);
+
+    void set_center(Point* new_center);
+    Point* get_center();
+
+    void set_tombe(bool new_tombe);
+    bool get_tombe();
+    void set_selectionne(bool new_selection);
+    bool get_selectionne();
+
+    Bonbon* getBonbon();
 };
 
 class Animation
 {
-public:
     Cell *c;
+public:
     Animation(Cell *cell) : c{cell} {}
     void translation_bonbon_vers_le_bas(Cell *cell2);
     void translation_bidirectionnelle(Cell *cell2);
@@ -59,8 +69,23 @@ public:
     
 };
 
+vector<Cell *> Cell::getNeighbors(){
+    return neighbors;
+}
 
-Cell::Cell(Point center, int w, int h, Bonbon *bonbon, Fl_Color frameColor, Fl_Color fillColor): center{center}, w{w}, h{h}, bonbon{bonbon}, frameColor{frameColor}, fillColor{fillColor}
+void Cell::set_center(Point* new_center){
+    center = *new_center;
+}
+
+Point* Cell::get_center(){
+    return &center;
+}
+
+Bonbon* Cell::getBonbon(){
+    return bonbon;
+}
+
+Cell::Cell(Point center, int w, int h, Bonbon *bonbon): center{center}, w{w}, h{h}, bonbon{bonbon}
 {
 }
 
@@ -79,14 +104,8 @@ void Cell::setNeighbors(const vector<Cell *> newNeighbors)
 
 void Cell::mouseMove(Point mouseLoc)
 {
-    if (contains(mouseLoc))
-    {
-        setFrameColor(FL_RED);
-    }
-    else
-    {
-        setFrameColor(FL_BLACK);
-    }
+    contains(mouseLoc);
+    
 }
 
 bool Cell::contains(Point p)
@@ -97,19 +116,19 @@ bool Cell::contains(Point p)
            p.y < center.y + h;
 }
 
-void Cell::setFrameColor(Fl_Color newFrameColor)
-{
-    frameColor = newFrameColor;
-}
 
-void Cell::setFillColor(Fl_Color newFillColor)
-{
-    fillColor = newFillColor;
-}
 
 void Cell::setBonbon(Bonbon *newBonbon)
 {
     bonbon = newBonbon;
+}
+
+void Cell::set_tombe(bool new_tombe){
+    tombe = new_tombe;
+}
+
+bool Cell::get_tombe(){
+    return tombe;
 }
 
 void Cell::Inversion(Cell *cell)
@@ -179,17 +198,17 @@ void Cell::mouseClick(Point mouseLoc,int &coup_restant)
 void Animation::translation_bonbon_vers_le_bas(Cell *cell2)
 {
 
-    Bonbon *bonbon1 = c->bonbon;
-    Bonbon *bonbon2 = cell2->bonbon;
+    Bonbon *bonbon1 = c->getBonbon();
+    Bonbon *bonbon2 = cell2->getBonbon();
 
-    Point centre1 = c->center;
-    Point centre2 = cell2->center;
+    Point* centre1 = c->get_center();
+    Point* centre2 = cell2->get_center();
     // string ret = test_voisins_valide(cell2); // retourne dans quelle direction est la cell2 par rapport à c
     // if (ret == "b") // si voisin du bas 
     // {
-    while (c->center.y != centre2.y)
+    while (c->get_center()->y != centre2->y)
     {
-        c->center.y += 1;
+        c->get_center()->y += 1;
         Fl::wait(0.01);
     }
 
@@ -201,23 +220,23 @@ void Animation::translation_bonbon_vers_le_bas(Cell *cell2)
 
     // c->center = centre2;
 
-    Point centre_actuel = c->center;
-    c->center = cell2->center;
-    cell2->center = centre_actuel;
+    Point *centre_actuel = c->get_center();
+    c->set_center(cell2->get_center());
+    cell2->set_center(centre_actuel);
 }
 
 string Animation::test_voisins_valide(Cell *cell2)
 {
     Point test;
-    for (auto &p : c->neighbors)
+    for (auto &p : c->getNeighbors())
     {
-        if (cell2->center.x == p->center.x && cell2->center.y == p->center.y)
+        if (cell2->get_center()->x == p->get_center()->x && cell2->get_center()->y == p->get_center()->y)
         {
-            test = p->center;
+            test = *p->get_center();
         }
     };
-    int position_voisin_x = (test.x - c->center.x) / 100;
-    int position_voisin_y = (test.y - c->center.y) / 100;
+    int position_voisin_x = (test.x - c->get_center()->x) / 100;
+    int position_voisin_y = (test.y - c->get_center()->y) / 100;
     Point test2{position_voisin_x, position_voisin_y};
 
     if (test2.x == -1 && test2.y == 0)
@@ -234,45 +253,53 @@ string Animation::test_voisins_valide(Cell *cell2)
 
 void Animation::translation_bidirectionnelle(Cell *cell2)
 {
-    Point centre1 = c->center;
-    Point centre2 = cell2->center;
+    Point centre1 = *(c->get_center());
+    Point centre2 = *(cell2->get_center());
     string ret = test_voisins_valide(cell2);
     if (ret == "g")
     {
-        while (c->center.x != centre2.x)
+        while (c->get_center()->x != centre2.x)
         {
-            c->center.x -= 1;
-            cell2->center.x += 1;
+            c->get_center()->x -= 1;
+            cell2->get_center()->x += 1;
             Fl::wait(0.01);
         }
     }
     else if (ret == "d")
     {
-        while (c->center.x != centre2.x)
+        while (c->get_center()->x != centre2.x)
         {
-            c->center.x += 1;
+            c->get_center()->x += 1;
             Fl::wait(0.01);
-            cell2->center.x -= 1;
+            cell2->get_center()->x -= 1;
         }
     }
     else if (ret == "h")
     {
-        while (c->center.y != centre2.y)
+        while (c->get_center()->y != centre2.y)
         {
-            c->center.y -= 1;
+            c->get_center()->y -= 1;
             Fl::wait(0.01);
-            cell2->center.y += 1;
+            cell2->get_center()->y += 1;
         }
     }
     else if (ret == "b")
     {
-        while (c->center.y != centre2.y)
+        while (c->get_center()->y != centre2.y)
         {
-            c->center.y += 1;
+            c->get_center()->y += 1;
             Fl::wait(0.01);
-            cell2->center.y -= 1;
+            cell2->get_center()->y -= 1;
         }
     }
+}
+
+void Cell::set_selectionne(bool new_selection){
+    is_selectionne = new_selection;
+}
+
+bool Cell::get_selectionne(){
+    return is_selectionne;
 }
 
 bool Cell::tester_coup(Cell *cell_p)

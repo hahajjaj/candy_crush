@@ -1,3 +1,7 @@
+/*
+Auteurs : Ehlalouch Safouan 000514145, Hamza Hajjaj 000461105
+But du programme : Jeu inspiré de Candy Crush Saga
+*/
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Shared_Image.H>
@@ -48,10 +52,10 @@ public:
     {
         Fl::add_timeout(1.0 / refreshPerSecond, Timer_CB, this);
         resizable(this);
-        menu.selection_ecran = &selection_ecran;
+        menu.set_selection_ecran(&selection_ecran);
         plateau.set_selection_ecran(&selection_ecran);
-        selec_niveau.selection_ecran = &selection_ecran;
-        selec_niveau.file_name = &file_name;
+        selec_niveau.set_selection_ecran(&selection_ecran);
+        selec_niveau.set_filename(&file_name);
         plateau.set_quitter_partie(&bool_quitter_partie);
     }
 

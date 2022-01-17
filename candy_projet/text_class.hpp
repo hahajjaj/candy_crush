@@ -1,3 +1,7 @@
+/*
+Nom et prénom : Ehlalouch Safouan 000514145, Hamza Hajjaj 000461105
+Classe qui permet l'affichage de texte
+*/
 #include <string>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
